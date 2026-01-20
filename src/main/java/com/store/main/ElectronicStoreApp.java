@@ -309,6 +309,7 @@ public class ElectronicStoreApp extends Application {
     }
 
     public static void main(String[] args) {
+        //
         launch(args);
     }
 }
