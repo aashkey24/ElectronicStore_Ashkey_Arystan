@@ -10,7 +10,7 @@ public abstract class User implements Serializable {
     private String fullName;
     private String phone;
 
-    // ДОБАВЬ ЭТО ПОЛЕ
+    protected boolean isBlocked = false;
     protected double salary;
 
     // Обнови конструктор (добавь salary)
@@ -36,4 +36,13 @@ public abstract class User implements Serializable {
     public String getPassword() { return password; }
     public String getFullName() { return fullName; }
     public abstract String getRole();
+
+    public boolean isBlocked() { return isBlocked; }
+    public void setBlocked(boolean blocked) { isBlocked = blocked; }
+
+    @Override
+    public String toString() {
+        String status = isBlocked ? "[BLOCKED] " : "";
+        return status + fullName + " (" + username + ")";
+    }
 }

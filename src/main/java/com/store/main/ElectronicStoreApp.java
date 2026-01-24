@@ -80,18 +80,29 @@ public class ElectronicStoreApp extends Application {
         loginBtn.setMinWidth(150);
 
         loginBtn.setOnAction(e -> {
-            boolean found = false;
+            String usernameInput = uField.getText();
+            String passwordInput = pField.getText();
+
+            // 1. Пробегаемся по списку пользователей
             for (User u : users) {
-                if (u.getUsername().equals(uField.getText()) && u.getPassword().equals(pField.getText())) {
+                // Если логин и пароль совпали
+                if (u.getUsername().equals(usernameInput) && u.getPassword().equals(passwordInput)) {
+
+                    // 2. ПРОВЕРКА БЛОКИРОВКИ (Твое требование Access Control)
+                    if (u.isBlocked()) {
+                        new Alert(Alert.AlertType.ERROR, "ACCESS DENIED. Your account is blocked by Administrator.").show();
+                        return; // Останавливаемся, дальше не идем
+                    }
+
+                    // 3. Если все ок - пускаем внутрь
                     currentUser = u;
                     showDashboard();
-                    found = true;
-                    break;
+                    return; // ВАЖНО: Выходим из метода, так как нашли человека
                 }
             }
-            if (!found) {
-                new Alert(Alert.AlertType.ERROR, "Invalid Username or Password!").show();
-            }
+
+            // 4. Если цикл закончился, а мы здесь — значит пароль неверный
+            new Alert(Alert.AlertType.ERROR, "Invalid Username or Password!").show();
         });
 
         root.getChildren().addAll(title, uField, pField, loginBtn);
