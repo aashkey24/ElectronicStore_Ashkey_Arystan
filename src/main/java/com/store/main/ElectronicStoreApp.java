@@ -2,6 +2,7 @@ package com.store.main;
 
 import com.store.model.*;
 import com.store.util.IOHandler;
+import com.store.view.AdminView;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -30,21 +31,22 @@ public class ElectronicStoreApp extends Application {
     @SuppressWarnings("unchecked")
     private void loadData() {
         // Загрузка пользователей
-        List<User> loadedUsers = (List<User>) IOHandler.load("users.dat");
+        // Java сама поймет, что T = User, потому что слева написано List<User>
+        List<User> loadedUsers = IOHandler.load("users.dat");
 
         if (loadedUsers != null && !loadedUsers.isEmpty()) {
             users = loadedUsers;
         } else {
             // Создаем ВСЕХ сотрудников по умолчанию
-            users.add(new Admin("admin", "admin1234", "System Administrator"));
-            users.add(new Manager("manager", "manager123", "Ilias Manager"));
-            users.add(new Cashier("cashier", "cashier123", "Abdulaziz Cashier"));
+            users.add(new Admin("admin", "123", "Name", "555-0101", 2000.0));
+            users.add(new Manager("manager", "123", "Name", "555-0101", 2000.0, "General"));
+            users.add(new Cashier("cashier", "123", "Name", "555-0101", 2000.0));
 
             IOHandler.save("users.dat", users);
         }
 
         // Загрузка товаров
-        List<Product> loadedProds = (List<Product>) IOHandler.load("products.dat");
+        List<Product> loadedProds = IOHandler.load("products.dat");
         if (loadedProds != null) {
             products = loadedProds;
         } else {
@@ -123,7 +125,11 @@ public class ElectronicStoreApp extends Application {
         // Логика кнопок для разных ролей
         if (currentUser instanceof Admin) {
             Button btn = createNavButton("Manage Staff");
-            btn.setOnAction(e -> content.getChildren().setAll(createAdminPane()));
+            btn.setOnAction(e -> {
+                // Создаем объект AdminView и передаем ему списки
+                AdminView adminView = new AdminView(users, products);
+                content.getChildren().setAll(adminView.getView());
+            });
             sidebar.getChildren().add(btn);
         }
 
@@ -162,46 +168,7 @@ public class ElectronicStoreApp extends Application {
         return btn;
     }
 
-    // --- ПАНЕЛЬ АДМИНИСТРАТОРА ---
-    private VBox createAdminPane() {
-        VBox pane = new VBox(10);
-        pane.setPadding(new Insets(20));
 
-        Label header = new Label("STAFF MANAGEMENT");
-        header.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-
-        ListView<User> userList = new ListView<>(FXCollections.observableArrayList(users));
-
-        TextField nameField = new TextField(); nameField.setPromptText("Full Name");
-        TextField userField = new TextField(); userField.setPromptText("Username");
-        TextField passField = new TextField(); passField.setPromptText("Password");
-
-        ComboBox<String> roleBox = new ComboBox<>(FXCollections.observableArrayList("Manager", "Cashier", "Administrator"));
-        roleBox.setValue("Cashier");
-
-        Button addBtn = new Button("Add User");
-        addBtn.setOnAction(e -> {
-            if (nameField.getText().isEmpty() || userField.getText().isEmpty()) {
-                new Alert(Alert.AlertType.WARNING, "Please fill all fields").show();
-                return;
-            }
-
-            String r = roleBox.getValue();
-            User newUser;
-            if (r.equals("Manager")) newUser = new Manager(userField.getText(), passField.getText(), nameField.getText());
-            else if (r.equals("Administrator")) newUser = new Admin(userField.getText(), passField.getText(), nameField.getText());
-            else newUser = new Cashier(userField.getText(), passField.getText(), nameField.getText());
-
-            users.add(newUser);
-            IOHandler.save("users.dat", users);
-            userList.setItems(FXCollections.observableArrayList(users));
-            new Alert(Alert.AlertType.INFORMATION, "User added successfully!").show();
-        });
-
-        pane.getChildren().addAll(header, userList, new Separator(),
-                new Label("Register New Employee:"), nameField, userField, passField, roleBox, addBtn);
-        return pane;
-    }
 
     // --- ПАНЕЛЬ МЕНЕДЖЕРА ---
     private VBox createManagerPane() {
