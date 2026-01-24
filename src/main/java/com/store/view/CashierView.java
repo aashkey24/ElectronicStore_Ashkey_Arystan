@@ -4,8 +4,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.geometry.Insets;
 
-public class CashierPane extends VBox {
-    public CashierPane() {
+public class CashierView extends VBox {
+    public CashierView() {
 
         setSpacing(20);
         setPadding(new Insets(20));
