@@ -19,12 +19,12 @@ public class Bill implements Serializable {
         this.quantity = quantity;
         this.totalPrice = totalPrice;
 
-        // Форматируем текущую дату красиво
+
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         this.date = LocalDateTime.now().format(dtf);
     }
 
-    // Этот метод генерирует текст для файла .txt
+
     public String getReceiptContent() {
         return "================================\n" +
                 "      ELECTRONIC STORE RECEIPT  \n" +

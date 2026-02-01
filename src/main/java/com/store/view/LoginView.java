@@ -30,10 +30,30 @@ public class LoginView {
         usernameField.setMaxWidth(250);
         usernameField.setStyle("-fx-border-color: #bdc3c7; -fx-border-radius: 5;");
 
-        passwordField = new PasswordField();
-        passwordField.setPromptText("Password");
-        passwordField.setMaxWidth(250);
-        passwordField.setStyle("-fx-border-color: #bdc3c7; -fx-border-radius: 5;");
+        // Поля ввода
+        PasswordField pField = new PasswordField();
+        TextField pTextField = new TextField();
+        pTextField.setManaged(false);
+        pTextField.setVisible(false);
+
+// Кнопка-переключатель
+        Button eyeBtn = new Button("👁");
+
+        eyeBtn.setOnAction(e -> {
+            if (pField.isVisible()) {
+                pTextField.setText(pField.getText());
+                pTextField.setVisible(true);
+                pTextField.setManaged(true);
+                pField.setVisible(false);
+                pField.setManaged(false);
+            } else {
+                pField.setText(pTextField.getText());
+                pField.setVisible(true);
+                pField.setManaged(true);
+                pTextField.setVisible(false);
+                pTextField.setManaged(false);
+            }
+        });
 
         loginButton = new Button("SIGN IN");
         loginButton.setMinWidth(250);
