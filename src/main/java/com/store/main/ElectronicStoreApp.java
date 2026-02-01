@@ -1,11 +1,8 @@
 package com.store.main;
-
+import javafx.scene.image.Image;
 import com.store.model.*;
 import com.store.util.IOHandler;
 import javafx.application.Application;
-import javafx.collections.FXCollections;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -20,12 +17,23 @@ public class ElectronicStoreApp extends Application {
     private Stage stage;
     private User currentUser;
 //smth
-    @Override
-    public void start(Stage primaryStage) {
-        this.stage = primaryStage;
-        loadData();
-        showLogin();
+@Override
+public void start(Stage primaryStage) {
+    this.stage = primaryStage;
+
+    // --- ДОБАВЛЯЕМ ЛОГОТИП КАК ИКОНКУ ПРИЛОЖЕНИЯ ---
+    try {
+        // Убедитесь, что путь совпадает с папкой resources
+        Image icon = new Image(getClass().getResourceAsStream("/com/store/electronicstoreapp/img.png"));
+        primaryStage.getIcons().add(icon);
+    } catch (Exception e) {
+        System.out.println("Logo not found: " + e.getMessage());
     }
+    // -----------------------------------------------
+
+    loadData();
+    showLogin();
+}
 
     @SuppressWarnings("unchecked")
     private void loadData() {
@@ -36,7 +44,7 @@ public class ElectronicStoreApp extends Application {
             users = loadedUsers;
         } else {
             // Создаем ВСЕХ сотрудников по умолчанию
-            users.add(new Admin("admin", "1234", "System Administrator"));
+            users.add(new Admin("admin", "admin1234", "System Administrator"));
             users.add(new Manager("manager", "manager123", "Ilias Manager"));
             users.add(new Cashier("cashier", "cashier123", "Abdulaziz Cashier"));
 
@@ -48,111 +56,52 @@ public class ElectronicStoreApp extends Application {
         if (loadedProds != null) {
             products = loadedProds;
         } else {
-            // Добавим пару товаров для теста
-            products.add(new Product("iPhone 15", 999.99, 10));
-            products.add(new Product("Laptop HP", 550.00, 2)); // Мало на складе
+            // ИСПРАВЛЕНИЕ: Добавляем категорию (2-й параметр) в конструктор
+            products.add(new Product("iPhone 15", "Smartphone", 999.99, 10));
+            products.add(new Product("Laptop HP", "Computers", 550.00, 2));
             IOHandler.save("products.dat", products);
         }
     }
 
-    // --- ЭКРАН ЛОГИНА ---
+    // --- ЭКРАН ЛОГИНА (MVC Refactored) ---
     private void showLogin() {
-        VBox root = new VBox(15);
-        root.setAlignment(Pos.CENTER);
-        root.setPadding(new Insets(40));
-        root.setStyle("-fx-background-color: #f4f4f4;");
+        // 1. Используем готовый View
+        com.store.view.LoginView loginView = new com.store.view.LoginView();
 
-        Label title = new Label("ELECTRONICS STORE LOGIN");
-        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #333;");
-
-        TextField uField = new TextField();
-        uField.setPromptText("Username");
-        uField.setMaxWidth(250);
-
-        PasswordField pField = new PasswordField();
-        pField.setPromptText("Password");
-        pField.setMaxWidth(250);
-
-        Button loginBtn = new Button("Sign In");
-        loginBtn.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold;");
-        loginBtn.setMinWidth(150);
-
-        loginBtn.setOnAction(e -> {
-            boolean found = false;
-            for (User u : users) {
-                if (u.getUsername().equals(uField.getText()) && u.getPassword().equals(pField.getText())) {
-                    currentUser = u;
-                    showDashboard();
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                new Alert(Alert.AlertType.ERROR, "Invalid Username or Password!").show();
-            }
+        // 2. Подключаем Controller
+        // Мы передаем ему lambda-выражение: что делать при успешном входе
+        new com.store.controller.LoginController(loginView, users, (authenticatedUser) -> {
+            this.currentUser = authenticatedUser; // Сохраняем вошедшего юзера
+            showDashboard(); // Переходим в меню
         });
 
-        root.getChildren().addAll(title, uField, pField, loginBtn);
-        stage.setScene(new Scene(root, 400, 350));
+        // 3. Показываем сцену
+        Scene scene = new Scene(loginView.getRoot(), 400, 350);
+        stage.setScene(scene);
         stage.setTitle("Login - Electronics Store");
+        stage.centerOnScreen();
         stage.show();
     }
 
     // --- ГЛАВНОЕ МЕНЮ (DASHBOARD) ---
     private void showDashboard() {
-        BorderPane root = new BorderPane();
+        // 1. Создаем View
+        com.store.view.DashboardView dashView = new com.store.view.DashboardView(currentUser);
 
-        // Боковая панель
-        VBox sidebar = new VBox(10);
-        sidebar.setPadding(new Insets(15));
-        sidebar.setStyle("-fx-background-color: #2c3e50;");
-        sidebar.setPrefWidth(220);
+        // 2. Создаем Controller
+        // Мы передаем ему ссылки на списки (users, products) и действие для Logout (this::showLogin)
+        new com.store.controller.DashboardController(
+                dashView,
+                currentUser,
+                users,
+                products,
+                this::showLogin // Это Runnable, который вернет нас на экран логина
+        );
 
-        Label welcome = new Label("Welcome,\n" + currentUser.getFullName());
-        welcome.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
-
-        Label role = new Label("[" + currentUser.getRole() + "]");
-        role.setStyle("-fx-text-fill: #bdc3c7;");
-
-        sidebar.getChildren().addAll(welcome, role, new Separator());
-
-        // Центральная часть
-        StackPane content = new StackPane();
-        content.getChildren().add(new Label("Select an option from the sidebar."));
-
-        // Логика кнопок для разных ролей
-        if (currentUser instanceof Admin) {
-            Button btn = createNavButton("Manage Staff");
-            btn.setOnAction(e -> content.getChildren().setAll(createAdminPane()));
-            sidebar.getChildren().add(btn);
-        }
-
-        if (currentUser instanceof Manager || currentUser instanceof Admin) {
-            Button btn = createNavButton("Inventory Management");
-            btn.setOnAction(e -> content.getChildren().setAll(createManagerPane()));
-            sidebar.getChildren().add(btn);
-        }
-
-        if (currentUser instanceof Cashier || currentUser instanceof Admin) {
-            Button btn = createNavButton("New Sale (POS)");
-            btn.setOnAction(e -> content.getChildren().setAll(createCashierPane()));
-            sidebar.getChildren().add(btn);
-        }
-
-        Region spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS);
-
-        Button logout = new Button("Logout");
-        logout.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white;");
-        logout.setMaxWidth(Double.MAX_VALUE);
-        logout.setOnAction(e -> showLogin());
-
-        sidebar.getChildren().addAll(spacer, logout);
-        root.setLeft(sidebar);
-        root.setCenter(content);
-
-        stage.setScene(new Scene(root, 950, 650));
+        // 3. Показываем
+        stage.setScene(new Scene(dashView.getRoot(), 950, 650));
         stage.setTitle("Dashboard - " + currentUser.getRole());
+        stage.centerOnScreen();
     }
 
     private Button createNavButton(String text) {
@@ -162,150 +111,44 @@ public class ElectronicStoreApp extends Application {
         return btn;
     }
 
-    // --- ПАНЕЛЬ АДМИНИСТРАТОРА ---
+    // --- ПАНЕЛЬ АДМИНИСТРАТОРА (MVC Refactored) ---
     private VBox createAdminPane() {
-        VBox pane = new VBox(10);
-        pane.setPadding(new Insets(20));
+        // 1. Создаем View
+        com.store.view.AdminPane adminView = new com.store.view.AdminPane();
 
-        Label header = new Label("STAFF MANAGEMENT");
-        header.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        // 2. Инициализируем Controller
+        // Передаем список users, чтобы контроллер мог добавлять/удалять и сохранять в файл
+        new com.store.controller.AdminController(adminView, users);
 
-        ListView<User> userList = new ListView<>(FXCollections.observableArrayList(users));
-
-        TextField nameField = new TextField(); nameField.setPromptText("Full Name");
-        TextField userField = new TextField(); userField.setPromptText("Username");
-        TextField passField = new TextField(); passField.setPromptText("Password");
-
-        ComboBox<String> roleBox = new ComboBox<>(FXCollections.observableArrayList("Manager", "Cashier", "Administrator"));
-        roleBox.setValue("Cashier");
-
-        Button addBtn = new Button("Add User");
-        addBtn.setOnAction(e -> {
-            if (nameField.getText().isEmpty() || userField.getText().isEmpty()) {
-                new Alert(Alert.AlertType.WARNING, "Please fill all fields").show();
-                return;
-            }
-
-            String r = roleBox.getValue();
-            User newUser;
-            if (r.equals("Manager")) newUser = new Manager(userField.getText(), passField.getText(), nameField.getText());
-            else if (r.equals("Administrator")) newUser = new Admin(userField.getText(), passField.getText(), nameField.getText());
-            else newUser = new Cashier(userField.getText(), passField.getText(), nameField.getText());
-
-            users.add(newUser);
-            IOHandler.save("users.dat", users);
-            userList.setItems(FXCollections.observableArrayList(users));
-            new Alert(Alert.AlertType.INFORMATION, "User added successfully!").show();
-        });
-
-        pane.getChildren().addAll(header, userList, new Separator(),
-                new Label("Register New Employee:"), nameField, userField, passField, roleBox, addBtn);
-        return pane;
+        // 3. Возвращаем панель
+        return adminView;
     }
 
-    // --- ПАНЕЛЬ МЕНЕДЖЕРА ---
+    // --- ПАНЕЛЬ МЕНЕДЖЕРА (MVC Refactored) ---
     private VBox createManagerPane() {
-        VBox pane = new VBox(10);
-        pane.setPadding(new Insets(20));
+        // 1. Создаем View
+        com.store.view.ManagerView managerView = new com.store.view.ManagerView();
 
-        Label header = new Label("INVENTORY & STOCK");
-        header.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        // 2. Подключаем Controller (он возьмет на себя всю работу)
+        // Передаем список продуктов для управления
+        new com.store.controller.InventoryController(managerView, products);
 
-        ListView<Product> productList = new ListView<>(FXCollections.observableArrayList(products));
-
-        TextField pName = new TextField(); pName.setPromptText("Product Name");
-        TextField pPrice = new TextField(); pPrice.setPromptText("Price");
-        TextField pStock = new TextField(); pStock.setPromptText("Initial Stock");
-
-        Button addBtn = new Button("Add / Restock Product");
-        addBtn.setOnAction(e -> {
-            try {
-                String name = pName.getText();
-                double price = Double.parseDouble(pPrice.getText());
-                int stock = Integer.parseInt(pStock.getText());
-
-                products.add(new Product(name, price, stock));
-                IOHandler.save("products.dat", products);
-                productList.setItems(FXCollections.observableArrayList(products));
-                new Alert(Alert.AlertType.INFORMATION, "Inventory Updated!").show();
-            } catch (NumberFormatException ex) {
-                new Alert(Alert.AlertType.ERROR, "Invalid Number Format!").show();
-            }
-        });
-
-        // Бонусная функция: Уведомление о малом остатке
-        Button alertBtn = new Button("Check Low Stock");
-        alertBtn.setOnAction(e -> {
-            long lowStockCount = products.stream().filter(p -> p.getStockQuantity() < 3).count();
-            if (lowStockCount > 0) {
-                new Alert(Alert.AlertType.WARNING, "Warning! " + lowStockCount + " items are running low (<3 units).").show();
-            } else {
-                new Alert(Alert.AlertType.INFORMATION, "All stock levels are healthy.").show();
-            }
-        });
-
-        pane.getChildren().addAll(header, productList, new Separator(),
-                new Label("New Product Details:"), pName, pPrice, pStock, addBtn, alertBtn);
-        return pane;
+        // 3. Возвращаем View
+        return managerView;
     }
 
     // --- ПАНЕЛЬ КАССИРА (С ИСПОЛЬЗОВАНИЕМ КЛАССА BILL) ---
+    // --- ПАНЕЛЬ КАССИРА (MVC Refactored) ---
     private VBox createCashierPane() {
-        VBox pane = new VBox(10);
-        pane.setPadding(new Insets(20));
+        // 1. Создаем View
+        com.store.view.CashierPane cashierView = new com.store.view.CashierPane();
 
-        Label header = new Label("CASHIER POINT OF SALE");
-        header.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        // 2. Инициализируем Controller (он сам свяжет логику с кнопками)
+        // Важно: передаем текущий список продуктов и текущего пользователя
+        new com.store.controller.CashierController(cashierView, products, currentUser);
 
-        ComboBox<Product> productBox = new ComboBox<>(FXCollections.observableArrayList(products));
-        productBox.setPromptText("Select Item to Sell");
-        productBox.setMaxWidth(300);
-
-        TextField qtyField = new TextField();
-        qtyField.setPromptText("Quantity");
-        qtyField.setMaxWidth(100);
-
-        Button sellBtn = new Button("CONFIRM SALE");
-        sellBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;");
-
-        sellBtn.setOnAction(e -> {
-            Product selected = productBox.getValue();
-            if (selected == null || qtyField.getText().isEmpty()) {
-                new Alert(Alert.AlertType.ERROR, "Please select a product and enter quantity.").show();
-                return;
-            }
-
-            try {
-                int qty = Integer.parseInt(qtyField.getText());
-
-                if (selected.getStockQuantity() >= qty) {
-                    // 1. Обновляем склад
-                    selected.setStockQuantity(selected.getStockQuantity() - qty);
-                    IOHandler.save("products.dat", products);
-
-                    // 2. Создаем чек (через класс Bill)
-                    double total = selected.getPrice() * qty;
-                    Bill newBill = new Bill(currentUser.getFullName(), selected.getName(), qty, total);
-
-                    // 3. Сохраняем чек в файл
-                    String fileName = "Bill_" + newBill.getBillId();
-                    IOHandler.printBill(newBill.getReceiptContent(), fileName);
-
-                    new Alert(Alert.AlertType.INFORMATION, "Sale Successful! Receipt saved to " + fileName + ".txt").show();
-
-                    // Сброс полей
-                    qtyField.clear();
-                    productBox.getSelectionModel().clearSelection();
-                } else {
-                    new Alert(Alert.AlertType.ERROR, "Insufficient Stock! Only " + selected.getStockQuantity() + " left.").show();
-                }
-            } catch (NumberFormatException ex) {
-                new Alert(Alert.AlertType.ERROR, "Quantity must be a valid number!").show();
-            }
-        });
-
-        pane.getChildren().addAll(header, new Label("Item:"), productBox, new Label("Qty:"), qtyField, sellBtn);
-        return pane;
+        // 3. Возвращаем готовую панель
+        return cashierView;
     }
 
     public static void main(String[] args) {

@@ -2,12 +2,12 @@ package com.store.view;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.stage.Stage;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 public class LoginView {
     private VBox root;
@@ -21,9 +21,22 @@ public class LoginView {
         root.setPadding(new Insets(50));
         root.setStyle("-fx-background-color: #ffffff;");
 
+        // --- ВСТАВКА ЛОГОТИПА ---
+        ImageView logoView = new ImageView();
+        try {
+            Image logo = new Image(getClass().getResourceAsStream("/com/store/electronicstoreapp/img.png"));
+            logoView.setImage(logo);
+            logoView.setFitHeight(100); // Высота логотипа (можно менять)
+            logoView.setPreserveRatio(true);
+        } catch (Exception e) {
+            System.out.println("Logo image missing");
+        }
+        // ------------------------
+
         Label title = new Label("ELECTRONIC STORE");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         title.setStyle("-fx-text-fill: #2c3e50;");
+
 
         usernameField = new TextField();
         usernameField.setPromptText("Username");
@@ -39,7 +52,7 @@ public class LoginView {
         loginButton.setMinWidth(250);
         loginButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-cursor: hand;");
 
-        root.getChildren().addAll(title, usernameField, passwordField, loginButton);
+        root.getChildren().addAll(logoView, title, usernameField, passwordField, loginButton);
     }
 
     public VBox getRoot() { return root; }

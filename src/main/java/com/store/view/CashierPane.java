@@ -1,32 +1,55 @@
 package com.store.view;
 
+import com.store.model.Product;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.geometry.Insets;
 
 public class CashierPane extends VBox {
+    // Делаем элементы доступными для контроллера
+    private ComboBox<Product> productBox;
+    private TextField quantityField;
+    private Button sellBtn;
+    private Label header;
+
     public CashierPane() {
-
         setSpacing(20);
-        setPadding(new Insets(20));
+        setPadding(new Insets(30));
+        setAlignment(Pos.TOP_CENTER);
+        setStyle("-fx-background-color: #ecf0f1;"); // Светлый фон
 
-        Label header = new Label("New Sale (Cashier)");
-        header.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        header = new Label("CASHIER POINT OF SALE");
+        header.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
+        // Форма ввода
         GridPane form = new GridPane();
-        form.setHgap(10); form.setVgap(10);
+        form.setHgap(15); form.setVgap(15);
+        form.setAlignment(Pos.CENTER);
 
-        TextField prodName = new TextField();
-        TextField prodQty = new TextField();
+        productBox = new ComboBox<>();
+        productBox.setPromptText("Select Product...");
+        productBox.setPrefWidth(250);
 
-        form.add(new Label("Product Name:"), 0, 0);
-        form.add(prodName, 1, 0);
+        quantityField = new TextField();
+        quantityField.setPromptText("Qty");
+        quantityField.setPrefWidth(80);
+
+        form.add(new Label("Select Item:"), 0, 0);
+        form.add(productBox, 1, 0);
         form.add(new Label("Quantity:"), 0, 1);
-        form.add(prodQty, 1, 1);
+        form.add(quantityField, 1, 1);
 
-        Button addBtn = new Button("Add to Bill");
-        Button printBtn = new Button("Print Bill (.txt)");
+        // Кнопка
+        sellBtn = new Button("CONFIRM SALE & PRINT BILL");
+        sellBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
+        sellBtn.setPadding(new Insets(10, 20, 10, 20));
 
-        getChildren().addAll(header, form, addBtn, printBtn);
+        getChildren().addAll(header, form, sellBtn);
     }
+
+    // Геттеры, чтобы Controller мог работать с этими полями
+    public ComboBox<Product> getProductBox() { return productBox; }
+    public TextField getQuantityField() { return quantityField; }
+    public Button getSellButton() { return sellBtn; }
 }

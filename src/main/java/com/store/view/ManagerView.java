@@ -1,68 +1,90 @@
 package com.store.view;
 
+import com.store.model.Product;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
-import javafx.stage.Stage;
 
-public class ManagerView {
-    private Stage stage;
+public class ManagerView extends VBox {
+    private TableView<Product> productTable;
+    private TextField nameField, categoryField, priceField, stockField;
+    private Button addBtn, restockBtn, deleteBtn;
+    private Label alertLabel; // Лейбл для предупреждений
 
-    public ManagerView(Stage stage) {
-        this.stage = stage;
+    @SuppressWarnings("unchecked")
+    public ManagerView() {
+        setSpacing(15);
+        setPadding(new Insets(20));
+        setAlignment(Pos.TOP_CENTER);
+        setStyle("-fx-background-color: #fdfefe;");
+
+        // Заголовок
+        Label header = new Label("INVENTORY MANAGEMENT (MANAGER)");
+        header.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2980b9;");
+
+        // Бонус: Лейбл для Low Stock Alert
+        alertLabel = new Label();
+        alertLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+
+        // 1. Таблица продуктов
+        productTable = new TableView<>();
+        productTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        productTable.setPrefHeight(300);
+
+        TableColumn<Product, String> nameCol = new TableColumn<>("Product Name");
+        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+        TableColumn<Product, String> catCol = new TableColumn<>("Category");
+        catCol.setCellValueFactory(new PropertyValueFactory<>("category"));
+
+        TableColumn<Product, Double> priceCol = new TableColumn<>("Price ($)");
+        priceCol.setCellValueFactory(new PropertyValueFactory<>("price"));
+
+        TableColumn<Product, Integer> stockCol = new TableColumn<>("Stock Qty");
+        stockCol.setCellValueFactory(new PropertyValueFactory<>("stockQuantity"));
+
+        productTable.getColumns().addAll(nameCol, catCol, priceCol, stockCol);
+
+        // 2. Форма управления
+        HBox form = new HBox(10);
+        form.setAlignment(Pos.CENTER);
+
+        nameField = new TextField(); nameField.setPromptText("Name");
+        categoryField = new TextField(); categoryField.setPromptText("Category");
+        priceField = new TextField(); priceField.setPromptText("Price");
+        stockField = new TextField(); stockField.setPromptText("Qty");
+        stockField.setPrefWidth(60);
+
+        form.getChildren().addAll(nameField, categoryField, priceField, stockField);
+
+        // 3. Кнопки
+        HBox actions = new HBox(15);
+        actions.setAlignment(Pos.CENTER);
+
+        addBtn = new Button("Add New Product");
+        addBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+
+        restockBtn = new Button("Restock Selected (+Qty)");
+        restockBtn.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white;");
+
+        deleteBtn = new Button("Delete Product");
+        deleteBtn.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white;");
+
+        actions.getChildren().addAll(addBtn, restockBtn, deleteBtn);
+
+        getChildren().addAll(header, alertLabel, productTable, new Separator(), new Label("Product Controls:"), form, actions);
     }
 
-    public void showLoginScene(javafx.event.EventHandler<javafx.event.ActionEvent> loginHandler,
-                               TextField userField, PasswordField passField) {
-        VBox layout = new VBox(15);
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(50));
-        layout.setStyle("-fx-background-color: #2c3e50;");
-
-        Label title = new Label("ELECTRONIC STORE");
-        title.setStyle("-fx-font-size: 26px; -fx-text-fill: white; -fx-font-weight: bold;");
-
-        userField.setPromptText("Username");
-        userField.setMaxWidth(250);
-        passField.setPromptText("Password");
-        passField.setMaxWidth(250);
-
-        Button loginBtn = new Button("Login");
-        loginBtn.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 14px;");
-        loginBtn.setPrefWidth(250);
-        loginBtn.setOnAction(loginHandler);
-
-        layout.getChildren().addAll(title, new Label(" "), userField, passField, loginBtn);
-
-        Scene scene = new Scene(layout, 450, 400);
-        stage.setScene(scene);
-        stage.setTitle("Login - Electronic Store");
-        stage.show();
-    }
-
-    public void showMainDashboard(String role, String name, Pane content) {
-        BorderPane root = new BorderPane();
-        VBox sidebar = new VBox(10);
-        sidebar.setPadding(new Insets(20));
-        sidebar.setStyle("-fx-background-color: #34495e;");
-        sidebar.setPrefWidth(200);
-
-        Label userLabel = new Label("User: " + name);
-        Label roleLabel = new Label("Role: " + role);
-        userLabel.setStyle("-fx-text-fill: #ecf0f1; -fx-font-weight: bold;");
-        roleLabel.setStyle("-fx-text-fill: #bdc3c7;");
-
-        Button logoutBtn = new Button("Logout");
-        logoutBtn.setMaxWidth(Double.MAX_VALUE);
-
-        sidebar.getChildren().addAll(userLabel, roleLabel, new Separator(), logoutBtn);
-
-        root.setLeft(sidebar);
-        root.setCenter(content);
-
-        Scene scene = new Scene(root, 1000, 700);
-        stage.setScene(scene);
-    }
+    // Getters
+    public TableView<Product> getProductTable() { return productTable; }
+    public TextField getNameField() { return nameField; }
+    public TextField getCategoryField() { return categoryField; }
+    public TextField getPriceField() { return priceField; }
+    public TextField getStockField() { return stockField; }
+    public Button getAddButton() { return addBtn; }
+    public Button getRestockButton() { return restockBtn; }
+    public Button getDeleteButton() { return deleteBtn; }
+    public Label getAlertLabel() { return alertLabel; }
 }

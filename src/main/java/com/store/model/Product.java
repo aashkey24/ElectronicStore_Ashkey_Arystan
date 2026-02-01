@@ -4,17 +4,25 @@ import java.io.Serializable;
 
 public class Product implements Serializable {
     private static final long serialVersionUID = 1L;
+
     private String name;
+    private String category; // Добавили поле
     private double price;
     private int stockQuantity;
 
-    public Product(String name, double price, int stockQuantity) {
+    // Обновленный конструктор принимает 4 параметра
+    public Product(String name, String category, double price, int stockQuantity) {
         this.name = name;
+        this.category = category;
         this.price = price;
         this.stockQuantity = stockQuantity;
     }
 
     public String getName() { return name; }
+
+    // Геттер для категории (обязателен для TableView)
+    public String getCategory() { return category; }
+
     public double getPrice() { return price; }
     public int getStockQuantity() { return stockQuantity; }
 
@@ -24,7 +32,7 @@ public class Product implements Serializable {
 
     @Override
     public String toString() {
-        // Красивый вывод для списка
-        return String.format("%s | Price: $%.2f | Stock: %d", name, price, stockQuantity);
+        // Обновили toString, чтобы он показывал и категорию
+        return String.format("%s (%s) | $%.2f | Qty: %d", name, category, price, stockQuantity);
     }
 }
