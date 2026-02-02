@@ -23,7 +23,6 @@ public class Product implements Serializable {
         this.purchaseDate = LocalDate.now();
     }
 
-    // --- GETTERS ---
     public String getName() { return name; }
     public String getCategory() { return category; }
     public String getSupplier() { return supplier; }
@@ -32,7 +31,7 @@ public class Product implements Serializable {
     public int getStockQuantity() { return stockQuantity; }
     public LocalDate getPurchaseDate() { return purchaseDate; }
 
-    // --- SETTERS (НОВЫЕ МЕТОДЫ, КОТОРЫХ НЕ ХВАТАЛО) ---
+
     public void setStockQuantity(int stockQuantity) {
         this.stockQuantity = stockQuantity;
     }
@@ -53,7 +52,6 @@ public class Product implements Serializable {
         this.supplier = supplier;
     }
 
-    // Имя товара обычно не меняют, но на всякий случай можно добавить
     public void setName(String name) {
         this.name = name;
     }

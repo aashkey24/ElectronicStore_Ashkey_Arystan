@@ -11,7 +11,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 public class ManagerView extends VBox {
-    // Вкладка товаров
     private TableView<Product> productTable;
     private TextField tfName, tfBuyPrice, tfSellPrice, tfQuantity;
     private ComboBox<String> cbCategory; // ТЕПЕРЬ ЭТО ВЫБОР
@@ -20,17 +19,14 @@ public class ManagerView extends VBox {
     private TextField tfSearch;
     private Label lblAlert;
 
-    // Вкладка поставщиков
     private ListView<String> supplierList;
     private TextField tfNewSupplier;
     private Button btnAddSupplier, btnRemoveSupplier;
 
-    // Вкладка категорий (НОВОЕ)
     private ListView<String> categoryList;
     private TextField tfNewCategory;
     private Button btnAddCategory, btnRemoveCategory;
 
-    // Заглушка
     private MenuItem miLogoutStub = new MenuItem();
 
     public ManagerView() {
@@ -38,7 +34,7 @@ public class ManagerView extends VBox {
         setSpacing(20);
         setStyle("-fx-background-color: #F3F4F6;");
 
-        // --- HEADER ---
+        // HEADER
         HBox header = new HBox(20);
         header.setAlignment(Pos.CENTER_LEFT);
 
@@ -54,7 +50,7 @@ public class ManagerView extends VBox {
 
         header.getChildren().addAll(title, spacer, lblAlert);
 
-        // --- TABS ---
+        // TABS
         TabPane tabPane = new TabPane();
         tabPane.setStyle("-fx-background-color: transparent;");
         VBox.setVgrow(tabPane, Priority.ALWAYS);
@@ -77,7 +73,7 @@ public class ManagerView extends VBox {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(15, 0, 0, 0));
 
-        // 1. Поиск
+        // SEARCH
         HBox tools = new HBox(10);
         tfSearch = new TextField();
         tfSearch.setPromptText("Search by Name...");
@@ -85,7 +81,7 @@ public class ManagerView extends VBox {
         tfSearch.setStyle("-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #D1D5DB;");
         tools.getChildren().add(tfSearch);
 
-        // 2. Таблица
+        // TABLE
         productTable = new TableView<>();
         productTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         VBox.setVgrow(productTable, Priority.ALWAYS);
@@ -111,7 +107,6 @@ public class ManagerView extends VBox {
 
         productTable.getColumns().addAll(colName, colCat, colSup, colStock, colBuy, colSell);
 
-        // 3. Форма
         VBox formCard = new VBox(15);
         formCard.setPadding(new Insets(20));
         formCard.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 1);");
@@ -121,7 +116,6 @@ public class ManagerView extends VBox {
 
         tfName = styledField("Name");
 
-        // ВАЖНО: Теперь это ComboBox
         cbCategory = new ComboBox<>();
         cbCategory.setPromptText("Select Category");
         cbCategory.setPrefWidth(200);
@@ -187,13 +181,13 @@ public class ManagerView extends VBox {
         return layout;
     }
 
-    // НОВАЯ ВКЛАДКА: КАТЕГОРИИ
+    // NEW WINDOW CATEGORY
     private Node createCategoriesTab() {
         HBox layout = new HBox(20);
         layout.setPadding(new Insets(20));
         layout.setAlignment(Pos.TOP_CENTER);
 
-        // Список категорий
+        // LIST OF CATEGORY
         VBox listBox = new VBox(10);
         listBox.setPrefWidth(300);
 
@@ -204,7 +198,7 @@ public class ManagerView extends VBox {
 
         listBox.getChildren().addAll(new Label("Product Categories (Sectors)"), categoryList, btnRemoveCategory);
 
-        // Добавление категории
+        // ADDING CATEGORY
         VBox addBox = new VBox(15);
         addBox.setPrefWidth(300);
         addBox.setPadding(new Insets(20));
@@ -228,7 +222,6 @@ public class ManagerView extends VBox {
         return tf;
     }
 
-    // Getters
     public TableView<Product> getProductTable() { return productTable; }
     public TextField getTfName() { return tfName; }
     public ComboBox<String> getCbCategory() { return cbCategory; } // Теперь ComboBox
@@ -249,7 +242,6 @@ public class ManagerView extends VBox {
     public Button getBtnAddSupplier() { return btnAddSupplier; }
     public Button getBtnRemoveSupplier() { return btnRemoveSupplier; }
 
-    // Новые геттеры для категорий
     public ListView<String> getCategoryList() { return categoryList; }
     public TextField getTfNewCategory() { return tfNewCategory; }
     public Button getBtnAddCategory() { return btnAddCategory; }

@@ -6,4 +6,3 @@ public class Admin extends User {
         super(username, password, fullName, "Administrator", dob, phone, email, salary);
     }
 }
-// Аналогично сделайте для Manager и Cashier, просто меняя роль в super.

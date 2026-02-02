@@ -1,37 +1,32 @@
 package com.store.util;
 
 import java.io.*;
+import java.util.ArrayList;
 
 public class IOHandler {
 
-    // Метод сохранения данных (users или products) в бинарный файл
-    public static void save(String path, Object obj) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(path))) {
-            oos.writeObject(obj);
+    // UNIVERSAL METHOD SAVING THE LIST (Generics <T>)
+    public static <T> void saveList(String filename, ArrayList<T> list) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+            oos.writeObject(list);
         } catch (IOException e) {
-            System.out.println("Error saving file: " + e.getMessage());
+            System.err.println("Error saving to " + filename + ": " + e.getMessage());
         }
     }
 
-    // Метод загрузки данных. Возвращает null, если файл еще не создан
-    public static Object load(String path) {
-        File file = new File(path);
+    // UNIVERSAL METHOD LOADING LIST
+    @SuppressWarnings("unchecked")
+    public static <T> ArrayList<T> loadList(String filename) {
+        File file = new File(filename);
         if (!file.exists()) {
-            return null;
+            return new ArrayList<>();
         }
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path))) {
-            return ois.readObject();
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
-    // Метод для создания текстового чека (Bill)
-    public static void printBill(String content, String fileName) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(fileName + ".txt"))) {
-            writer.println(content);
-        } catch (IOException e) {
-            e.printStackTrace();
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+            return (ArrayList<T>) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error loading from " + filename + ": " + e.getMessage());
+            return new ArrayList<>();
         }
     }
 }

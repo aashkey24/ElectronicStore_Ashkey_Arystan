@@ -10,24 +10,23 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 public class CashierPane extends BorderPane {
-    // Left: Products
+    // Products
     private TableView<Product> productsTable;
     private TextField tfSearch, tfQuantity;
     private Button btnAddToCart;
 
-    // Right: Cart (Top) & History (Bottom)
+    // CART
     private TableView<Product> cartTable;
     private Button btnRemoveFromCart, btnCheckout;
     private Label lblTotal;
 
-    // NEW: Today's History
+    //Today's History
     private ListView<String> historyList; // Простой список "Чек #1 - 50$"
     private Label lblHistoryTotal; // "Total Bills Today: 5"
 
     public CashierPane() {
         setStyle("-fx-background-color: #F3F4F6;");
 
-        // --- LEFT SIDE: PRODUCTS ---
         VBox leftPane = new VBox(10);
         leftPane.setPadding(new Insets(15));
         leftPane.setStyle("-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 1);");
@@ -64,12 +63,11 @@ public class CashierPane extends BorderPane {
 
         leftPane.getChildren().addAll(lblProd, tfSearch, productsTable, cartActions);
 
-        // --- RIGHT SIDE ---
         SplitPane rightSplit = new SplitPane();
         rightSplit.setOrientation(javafx.geometry.Orientation.VERTICAL);
         rightSplit.setStyle("-fx-background-color: transparent;");
 
-        // Top Right: Current Cart
+        // Current Cart
         VBox cartPane = new VBox(10);
         cartPane.setPadding(new Insets(15));
         cartPane.setStyle("-fx-background-color: white;");
@@ -102,7 +100,7 @@ public class CashierPane extends BorderPane {
 
         cartPane.getChildren().addAll(lblCart, cartTable, btnRemoveFromCart, new Separator(), lblTotal, btnCheckout);
 
-        // Bottom Right: Today's History
+        // Today's History
         VBox historyPane = new VBox(10);
         historyPane.setPadding(new Insets(15));
         historyPane.setStyle("-fx-background-color: #F9FAFB;");
@@ -119,17 +117,16 @@ public class CashierPane extends BorderPane {
         historyPane.getChildren().addAll(lblHist, historyList, lblHistoryTotal);
 
         rightSplit.getItems().addAll(cartPane, historyPane);
-        rightSplit.setDividerPositions(0.6); // 60% корзина, 40% история
+        rightSplit.setDividerPositions(0.6);
 
         // Main Layout
         SplitPane mainSplit = new SplitPane();
         mainSplit.getItems().addAll(leftPane, rightSplit);
-        mainSplit.setDividerPositions(0.4); // 40% продукты, 60% право
+        mainSplit.setDividerPositions(0.4);
 
         setCenter(mainSplit);
     }
 
-    // Getters
     public TableView<Product> getProductsTable() { return productsTable; }
     public TableView<Product> getCartTable() { return cartTable; }
     public TextField getTfSearch() { return tfSearch; }
@@ -139,7 +136,6 @@ public class CashierPane extends BorderPane {
     public Button getBtnCheckout() { return btnCheckout; }
     public Label getLblTotal() { return lblTotal; }
 
-    // New Getters
     public ListView<String> getHistoryList() { return historyList; }
     public Label getLblHistoryTotal() { return lblHistoryTotal; }
 }

@@ -14,8 +14,6 @@ public class AdminPane extends VBox {
     private DatePicker dpDob;
     private ComboBox<String> cbRole;
     private Button btnAdd, btnUpdate, btnDelete, btnClear;
-
-    // Финансы
     private DatePicker dpStart, dpEnd;
     private Button btnCalculate;
     private Label lblTotalSales, lblTotalCosts, lblProfit;
@@ -27,12 +25,12 @@ public class AdminPane extends VBox {
         setSpacing(20);
         setStyle("-fx-background-color: #F3F4F6;");
 
-        // --- ЧАСТЬ 1: ТАБЛИЦА (Теперь занимает все свободное место) ---
+        // Table
         VBox tableCard = new VBox(10);
         tableCard.setPadding(new Insets(15));
         tableCard.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
 
-        // РАСТЯГИВАЕМ КАРТОЧКУ С ТАБЛИЦЕЙ
+        // expanding the table
         VBox.setVgrow(tableCard, Priority.ALWAYS);
 
         Label lblTable = new Label("Employee Management");
@@ -41,7 +39,7 @@ public class AdminPane extends VBox {
         userTable = new TableView<>();
         userTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        // РАСТЯГИВАЕМ САМУ ТАБЛИЦУ ВНУТРИ КАРТОЧКИ
+        // expand inner table
         VBox.setVgrow(userTable, Priority.ALWAYS);
 
         TableColumn<User, String> colName = new TableColumn<>("Full Name");
@@ -59,15 +57,15 @@ public class AdminPane extends VBox {
         userTable.getColumns().addAll(colName, colRole, colSalary, colPhone);
         tableCard.getChildren().addAll(lblTable, userTable);
 
-        // --- ЧАСТЬ 2: ФОРМА И СТАТИСТИКА (Внизу, фиксированный размер) ---
-        HBox bottomSection = new HBox(20); // Ставим Форму и Статистику рядом (слева и справа)
-        bottomSection.setPrefHeight(320);  // Фиксируем высоту нижней части
+        //
+        HBox bottomSection = new HBox(20); // We put the Form and Statistics side by side (left and right)
+        bottomSection.setPrefHeight(320);
 
-        // 2.1 Форма ввода
+        // INPUT FORM
         VBox formCard = new VBox(15);
         formCard.setPadding(new Insets(20));
         formCard.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
-        HBox.setHgrow(formCard, Priority.ALWAYS); // Форма занимает 60-70% ширины
+        HBox.setHgrow(formCard, Priority.ALWAYS);
 
         GridPane form = new GridPane();
         form.setHgap(15); form.setVgap(15);
@@ -100,10 +98,10 @@ public class AdminPane extends VBox {
         actions.getChildren().addAll(btnAdd, btnUpdate, btnDelete, btnClear);
         formCard.getChildren().addAll(new Label("Edit Details"), form, new Separator(), actions);
 
-        // 2.2 Статистика (Справа)
+        // STATISTICS
         VBox statsCard = new VBox(15);
         statsCard.setPadding(new Insets(20));
-        statsCard.setPrefWidth(350); // Фиксируем ширину для статистики
+        statsCard.setPrefWidth(350);
         statsCard.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
 
         Label lblStats = new Label("Financial Overview");
@@ -129,8 +127,6 @@ public class AdminPane extends VBox {
         statsCard.getChildren().addAll(lblStats, dpStart, dpEnd, btnCalculate, new Separator(), results);
 
         bottomSection.getChildren().addAll(formCard, statsCard);
-
-        // Добавляем: Сверху Таблица (растет), Снизу Формы (фиксированы)
         getChildren().addAll(tableCard, bottomSection);
     }
 
@@ -140,8 +136,6 @@ public class AdminPane extends VBox {
         tf.setStyle("-fx-padding: 6; -fx-border-color: #D1D5DB; -fx-border-radius: 4;");
         return tf;
     }
-
-    // Getters остались теми же
     public TableView<User> getUserTable() { return userTable; }
     public TextField getTfUsername() { return tfUsername; }
     public TextField getTfPassword() { return tfPassword; }

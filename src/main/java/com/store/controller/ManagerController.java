@@ -3,11 +3,12 @@ package com.store.controller;
 import com.store.model.Product;
 import com.store.model.User;
 import com.store.view.ManagerView;
+import com.store.util.IOHandler;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -25,13 +26,17 @@ public class ManagerController {
     public ManagerController(ManagerView view, User user) {
         this.view = view;
         this.currentUser = user;
-        this.products = FXCollections.observableArrayList();
-        this.suppliers = FXCollections.observableArrayList();
-        this.categories = FXCollections.observableArrayList();
 
-        loadData();
+        // Load products using IOHandler
+        this.products = FXCollections.observableArrayList(IOHandler.loadList(PRODUCTS_FILE));
+        this.suppliers = FXCollections.observableArrayList(IOHandler.loadList(SUPPLIERS_FILE));
+        this.categories = FXCollections.observableArrayList(IOHandler.loadList(CATEGORIES_FILE));
 
-        // Привязываем данные
+        if (categories.isEmpty()) {
+            categories.addAll("Computers", "Smartphones", "Accessories");
+            saveAllData();
+        }
+
         view.getProductTable().setItems(products);
         view.getSupplierList().setItems(suppliers);
         view.getCbSupplier().setItems(suppliers);
@@ -43,8 +48,7 @@ public class ManagerController {
     }
 
     private void attachEvents() {
-        // --- PRODUCTS ---
-        view.getBtnAddProduct().setOnAction(e -> addOrRestockProduct()); // <--- ИЗМЕНИЛИ МЕТОД
+        view.getBtnAddProduct().setOnAction(e -> addOrRestockProduct());
         view.getBtnUpdateProduct().setOnAction(e -> updateProduct());
         view.getBtnDeleteProduct().setOnAction(e -> deleteProduct());
         view.getBtnClearForm().setOnAction(e -> clearProductForm());
@@ -54,12 +58,8 @@ public class ManagerController {
         });
 
         view.getTfSearch().textProperty().addListener((obs, oldVal, newVal) -> filterProducts(newVal));
-
-        // --- SUPPLIERS ---
         view.getBtnAddSupplier().setOnAction(e -> addSupplier());
         view.getBtnRemoveSupplier().setOnAction(e -> removeSupplier());
-
-        // --- CATEGORIES ---
         view.getBtnAddCategory().setOnAction(e -> addCategory());
         view.getBtnRemoveCategory().setOnAction(e -> removeCategory());
     }
@@ -73,45 +73,32 @@ public class ManagerController {
         view.getTfSellPrice().setText(String.valueOf(p.getSellingPrice()));
     }
 
-    // === ГЛАВНОЕ ИЗМЕНЕНИЕ: LOGIC RESTOCK ===
     private void addOrRestockProduct() {
         Product newProduct = createProductFromForm();
-        if (newProduct == null) return; // Ошибка валидации
+        if (newProduct == null) return;
 
-        // 1. Ищем, есть ли товар с таким именем
         for (Product existing : products) {
             if (existing.getName().equalsIgnoreCase(newProduct.getName())) {
-
-                // --- ЛОГИКА RESTOCK (ПОПОЛНЕНИЕ) ---
                 int addedQty = newProduct.getStockQuantity();
-                int newTotal = existing.getStockQuantity() + addedQty;
-
-                existing.setStockQuantity(newTotal);
-
-                // Обновляем цены и инфо, если они изменились в новой партии
+                existing.setStockQuantity(existing.getStockQuantity() + addedQty);
                 existing.setPurchasePrice(newProduct.getPurchasePrice());
                 existing.setSellingPrice(newProduct.getSellingPrice());
                 existing.setSupplier(newProduct.getSupplier());
                 existing.setCategory(newProduct.getCategory());
 
-                saveData();
-                view.getProductTable().refresh(); // Обновляем таблицу визуально
+                saveAllData();
+                view.getProductTable().refresh();
                 clearProductForm();
                 updateLowStockAlert();
-
-                showAlert("Restock Successful",
-                        "Added " + addedQty + " units to '" + existing.getName() + "'.\n" +
-                                "New Total Stock: " + newTotal);
-                return; // Выходим, чтобы не добавлять дубликат
+                showAlert("Restock Successful", "Added " + addedQty + " units.");
+                return;
             }
         }
-
-        // 2. Если не нашли совпадений - добавляем как новый
         products.add(newProduct);
-        saveData();
+        saveAllData();
         clearProductForm();
         updateLowStockAlert();
-        showAlert("Success", "New Product added to Inventory.");
+        showAlert("Success", "New Product added.");
     }
 
     private void updateProduct() {
@@ -120,20 +107,17 @@ public class ManagerController {
             showAlert("Error", "Select a product to update!");
             return;
         }
-
         Product updated = createProductFromForm();
         if (updated != null) {
-            // Если мы меняем имя на такое, которое УЖЕ есть (но не у самого себя), это дубликат
             for (Product p : products) {
                 if (p != selected && p.getName().equalsIgnoreCase(updated.getName())) {
-                    showAlert("Error", "Product name '" + updated.getName() + "' already exists! Use Add to restock.");
+                    showAlert("Error", "Name already exists! Use Add to restock.");
                     return;
                 }
             }
-
             int index = products.indexOf(selected);
             products.set(index, updated);
-            saveData();
+            saveAllData();
             clearProductForm();
             updateLowStockAlert();
             showAlert("Success", "Product updated.");
@@ -147,10 +131,9 @@ public class ManagerController {
             String sup = view.getCbSupplier().getValue();
 
             if (name.isEmpty() || cat == null || sup == null) {
-                showAlert("Error", "Name, Category and Supplier are required!");
+                showAlert("Error", "Required fields missing!");
                 return null;
             }
-
             int qty = Integer.parseInt(view.getTfQuantity().getText().trim());
             double buy = Double.parseDouble(view.getTfBuyPrice().getText().trim());
             double sell = Double.parseDouble(view.getTfSellPrice().getText().trim());
@@ -159,10 +142,9 @@ public class ManagerController {
                 showAlert("Error", "Values cannot be negative!");
                 return null;
             }
-
             return new Product(name, cat, sup, buy, sell, qty);
         } catch (NumberFormatException e) {
-            showAlert("Error", "Prices and Quantity must be valid numbers!");
+            showAlert("Error", "Invalid numbers!");
             return null;
         }
     }
@@ -171,48 +153,42 @@ public class ManagerController {
         Product selected = view.getProductTable().getSelectionModel().getSelectedItem();
         if (selected != null) {
             products.remove(selected);
-            saveData();
+            saveAllData();
             clearProductForm();
         }
     }
 
-    // --- SUPPLIERS ---
     private void addSupplier() {
         String name = view.getTfNewSupplier().getText().trim();
         if (!name.isEmpty() && !suppliers.contains(name)) {
             suppliers.add(name);
-            saveData();
+            saveAllData();
             view.getTfNewSupplier().clear();
-        } else if (suppliers.contains(name)) {
-            showAlert("Error", "Supplier already exists!");
-        }
+        } else if (suppliers.contains(name)) showAlert("Error", "Exists!");
     }
 
     private void removeSupplier() {
         String selected = view.getSupplierList().getSelectionModel().getSelectedItem();
         if (selected != null) {
             suppliers.remove(selected);
-            saveData();
+            saveAllData();
         }
     }
 
-    // --- CATEGORIES ---
     private void addCategory() {
         String name = view.getTfNewCategory().getText().trim();
         if (!name.isEmpty() && !categories.contains(name)) {
             categories.add(name);
-            saveData();
+            saveAllData();
             view.getTfNewCategory().clear();
-        } else if (categories.contains(name)) {
-            showAlert("Error", "Category already exists!");
-        }
+        } else if (categories.contains(name)) showAlert("Error", "Exists!");
     }
 
     private void removeCategory() {
         String selected = view.getCategoryList().getSelectionModel().getSelectedItem();
         if (selected != null) {
             categories.remove(selected);
-            saveData();
+            saveAllData();
         }
     }
 
@@ -248,47 +224,11 @@ public class ManagerController {
         view.getProductTable().getSelectionModel().clearSelection();
     }
 
-    private void saveData() {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(PRODUCTS_FILE))) {
-            oos.writeObject(new ArrayList<>(products));
-        } catch (IOException e) { e.printStackTrace(); }
-
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(SUPPLIERS_FILE))) {
-            oos.writeObject(new ArrayList<>(suppliers));
-        } catch (IOException e) { e.printStackTrace(); }
-
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(CATEGORIES_FILE))) {
-            oos.writeObject(new ArrayList<>(categories));
-        } catch (IOException e) { e.printStackTrace(); }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void loadData() {
-        File pFile = new File(PRODUCTS_FILE);
-        if (pFile.exists()) {
-            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(pFile))) {
-                products.setAll((ArrayList<Product>) ois.readObject());
-            } catch (Exception e) { e.printStackTrace(); }
-        }
-
-        File sFile = new File(SUPPLIERS_FILE);
-        if (sFile.exists()) {
-            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(sFile))) {
-                suppliers.setAll((ArrayList<String>) ois.readObject());
-            } catch (Exception e) { e.printStackTrace(); }
-        }
-
-        File cFile = new File(CATEGORIES_FILE);
-        if (cFile.exists()) {
-            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(cFile))) {
-                categories.setAll((ArrayList<String>) ois.readObject());
-            } catch (Exception e) { e.printStackTrace(); }
-        }
-
-        if (categories.isEmpty()) {
-            categories.addAll("Computers", "Smartphones", "Accessories", "Home Appliances");
-            saveData();
-        }
+    // SAVE ALL DATA USING IOHANDLER
+    private void saveAllData() {
+        IOHandler.saveList(PRODUCTS_FILE, new ArrayList<>(products));
+        IOHandler.saveList(SUPPLIERS_FILE, new ArrayList<>(suppliers));
+        IOHandler.saveList(CATEGORIES_FILE, new ArrayList<>(categories));
     }
 
     private void showAlert(String title, String content) {

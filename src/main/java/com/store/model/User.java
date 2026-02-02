@@ -25,8 +25,6 @@ public abstract class User implements Serializable {
         this.email = email;
         this.salary = salary;
     }
-
-    // Геттеры
     public String getUsername() { return username; }
     public String getPassword() { return password; }
     public String getFullName() { return fullName; }
@@ -36,7 +34,6 @@ public abstract class User implements Serializable {
     public String getEmail() { return email; }
     public double getSalary() { return salary; }
 
-    // Сеттеры (важны для редактирования)
     public void setFullName(String fullName) { this.fullName = fullName; }
     public void setPassword(String password) { this.password = password; }
     public void setPhone(String phone) { this.phone = phone; }

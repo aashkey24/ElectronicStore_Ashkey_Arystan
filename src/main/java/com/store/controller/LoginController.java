@@ -22,8 +22,6 @@ public class LoginController {
         this.view = view;
         this.primaryStage = primaryStage;
         this.users = loadUsers();
-
-        // Привязываем действие к кнопке
         this.view.getLoginButton().setOnAction(e -> handleLogin());
     }
 
@@ -47,13 +45,13 @@ public class LoginController {
     }
 
     private void openDashboard(User user) {
-        // 1. Создаем контент в зависимости от роли
+        // create a content depending on the user role
         javafx.scene.Node content = null;
 
         switch (user.getRole()) {
             case "Administrator":
                 AdminPane adminPane = new AdminPane();
-                new AdminController(adminPane); // Подключаем логику
+                new AdminController(adminPane);
                 content = adminPane;
                 break;
 
@@ -70,23 +68,20 @@ public class LoginController {
                 break;
         }
 
-        // 2. Создаем Dashboard и кладем в него контент
+        // Create a dashboard using content = role of the user
         DashboardView dashboard = new DashboardView(user, content);
 
-        // 3. Настраиваем кнопку Logout в Dashboard
+        // Configure the Logout button in the Dashboard
         dashboard.getLogoutBtn().setOnAction(e -> {
             LoginView loginView = new LoginView();
             new LoginController(loginView, primaryStage);
             primaryStage.setScene(new Scene(loginView, 900, 600));
         });
 
-        // 4. Показываем
-        // ... внутри метода openDashboard
-
-        // 4. Показываем
-        Scene scene = new Scene(dashboard, 1200, 800); // Увеличили базовый размер
+        // Show
+        Scene scene = new Scene(dashboard, 1200, 800);
         primaryStage.setScene(scene);
-        primaryStage.setMaximized(true); // <--- ДОБАВЬТЕ ЭТУ СТРОКУ
+        primaryStage.setMaximized(true);
         primaryStage.centerOnScreen();
     }
 

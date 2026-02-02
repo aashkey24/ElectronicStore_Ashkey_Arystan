@@ -11,7 +11,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-public class LoginView extends GridPane { // Наследуем от GridPane, чтобы работало setScene
+public class LoginView extends GridPane { // TO WORK WITH SETSCENE EXTEND GRIDPANE
 
     private TextField usernameField;
     private PasswordField passwordField;
@@ -20,22 +20,21 @@ public class LoginView extends GridPane { // Наследуем от GridPane, �
     public LoginView() {
         setAlignment(Pos.CENTER);
 
-        // 1. Красивый фон (Градиент)
         setStyle("-fx-background-color: linear-gradient(to bottom right, #2c3e50, #4ca1af);");
 
-        // 2. Белая карточка по центру
+        // WHITE CARD IN CENTER
         VBox card = new VBox(20);
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(40));
         card.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
 
-        // Эффект тени для карточки
+        // SHADOW EFFECT
         DropShadow shadow = new DropShadow();
         shadow.setColor(Color.gray(0.2));
         shadow.setRadius(20);
         card.setEffect(shadow);
 
-        // --- ЛОГОТИП ---
+        // LOGO
         ImageView logoView = new ImageView();
         try {
             Image logo = new Image(getClass().getResourceAsStream("/com/store/electronicstoreapp/img.png"));
@@ -48,7 +47,7 @@ public class LoginView extends GridPane { // Наследуем от GridPane, �
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
         title.setStyle("-fx-text-fill: #34495e;");
 
-        // Поля ввода
+        // TEXT FILEDS
         usernameField = new TextField();
         usernameField.setPromptText("Username");
         usernameField.setStyle("-fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7; -fx-border-radius: 5;");
@@ -59,18 +58,18 @@ public class LoginView extends GridPane { // Наследуем от GridPane, �
         passwordField.setStyle("-fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7; -fx-border-radius: 5;");
         passwordField.setPrefWidth(280);
 
-        // Кнопка
+        // BUTTON
         loginButton = new Button("SIGN IN");
         loginButton.setPrefWidth(280);
         loginButton.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5; -fx-cursor: hand;");
 
-        // Эффект нажатия
+        // CLICK EFFECT
         loginButton.setOnMouseEntered(e -> loginButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5;"));
         loginButton.setOnMouseExited(e -> loginButton.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5;"));
 
         card.getChildren().addAll(logoView, title, usernameField, passwordField, loginButton);
 
-        // Добавляем карточку в центр GridPane
+        // ADD IN THE CENTER
         add(card, 0, 0);
     }
 
