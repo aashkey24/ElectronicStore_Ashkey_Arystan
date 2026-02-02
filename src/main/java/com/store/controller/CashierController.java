@@ -1,8 +1,8 @@
 package com.store.controller;
 
+import com.store.model.Bill;
 import com.store.model.Product;
 import com.store.model.User;
-import com.store.model.Bill;
 import com.store.view.CashierPane;
 import com.store.util.IOHandler;
 import javafx.collections.FXCollections;
@@ -25,10 +25,7 @@ public class CashierController {
     public CashierController(CashierPane view, User user) {
         this.view = view;
         this.currentUser = user;
-
-        // LOAD USING IOHANDLER
         this.allProducts = FXCollections.observableArrayList(IOHandler.loadList(PRODUCTS_FILE));
-
         this.cart = FXCollections.observableArrayList();
 
         view.getProductsTable().setItems(allProducts);
@@ -55,81 +52,126 @@ public class CashierController {
         });
     }
 
-    private void loadTodayHistory() {
-        File folder = new File(".");
-        File[] files = folder.listFiles();
-        ObservableList<String> history = FXCollections.observableArrayList();
-        int count = 0;
-
-        if (files != null) {
-            String todayStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-            for (File f : files) {
-                if (f.getName().startsWith("Bill_" + todayStr) && f.getName().endsWith(".txt")) {
-                    if (isCreatedByCurrentCashier(f)) {
-                        double amount = extractTotal(f);
-                        history.add(f.getName() + " | " + String.format("%.2f $", amount));
-                        count++;
-                    }
-                }
-            }
-        }
-        view.getHistoryList().setItems(history);
-        view.getLblHistoryTotal().setText("Bills Generated Today: " + count);
-    }
-
-    private boolean isCreatedByCurrentCashier(File f) {
-        try (Scanner sc = new Scanner(f)) {
-            while (sc.hasNextLine()) {
-                if (sc.nextLine().contains("Cashier: " + currentUser.getFullName())) return true;
-            }
-        } catch (Exception e) { return false; }
-        return false;
-    }
-
-    private double extractTotal(File f) {
-        try (Scanner sc = new Scanner(f)) {
-            while (sc.hasNextLine()) {
-                String line = sc.nextLine();
-                if (line.startsWith("TOTAL AMOUNT:")) {
-                    return Double.parseDouble(line.replace("TOTAL AMOUNT:", "").replace("$", "").trim().replace(",", "."));
-                }
-            }
-        } catch (Exception e) {}
-        return 0.0;
-    }
-
     private void addToCart() {
         Product selected = view.getProductsTable().getSelectionModel().getSelectedItem();
         String qtyText = view.getTfQuantity().getText();
+
         if (selected == null || qtyText.isEmpty()) return;
 
         try {
             int qty = Integer.parseInt(qtyText);
             if (qty <= 0) return;
+
             if (qty > selected.getStockQuantity()) {
-                showAlert("Stock Error", "Not enough stock!");
+                showAlert("Stock Error", "Available: " + selected.getStockQuantity());
                 return;
             }
 
-            boolean found = false;
-            for(Product p : cart) {
-                if(p.getName().equals(selected.getName())) {
+            // ПРИМЕНЕНИЕ СКИДКИ: Берем цену со скидкой
+            double finalPrice = selected.getDiscountedPrice();
+
+            // Ищем в корзине
+            boolean exists = false;
+            for (Product p : cart) {
+                if (p.getName().equals(selected.getName())) {
                     if (p.getStockQuantity() + qty > selected.getStockQuantity()) {
-                        showAlert("Error", "Exceeds stock!");
-                        return;
+                        showAlert("Error", "Exceeds stock!"); return;
                     }
                     p.setStockQuantity(p.getStockQuantity() + qty);
-                    found = true;
-                    view.getCartTable().refresh();
+                    exists = true;
                     break;
                 }
             }
-            if (!found) {
-                cart.add(new Product(selected.getName(), selected.getCategory(), selected.getSupplier(),
-                        selected.getPurchasePrice(), selected.getSellingPrice(), qty));
+
+            if (!exists) {
+                // Создаем копию для корзины с ПРИМЕНЕННОЙ ценой
+                Product itemForCart = new Product(selected.getName(), selected.getCategory(),
+                        selected.getSupplier(), selected.getPurchasePrice(),
+                        finalPrice, qty);
+                cart.add(itemForCart);
             }
+
+            view.getCartTable().refresh();
             updateTotal();
-        } catch (NumberFormatException e) { showAlert("Error", "Invalid quantity."); }
+            view.getTfQuantity().clear();
+
+        } catch (NumberFormatException e) {
+            showAlert("Error", "Invalid quantity.");
+        }
+    }
+
+    private void checkout() {
+        if (cart.isEmpty()) return;
+
+        // 1. Уменьшаем сток
+        for (Product cartItem : cart) {
+            for (Product stockItem : allProducts) {
+                if (stockItem.getName().equals(cartItem.getName())) {
+                    stockItem.setStockQuantity(stockItem.getStockQuantity() - cartItem.getStockQuantity());
+                    break;
+                }
+            }
+        }
+
+        // 2. Сохраняем базу
+        IOHandler.saveList(PRODUCTS_FILE, new ArrayList<>(allProducts));
+
+        // 3. Печатаем чек (используя класс Bill)
+        printBill();
+
+        // 4. Очистка
+        cart.clear();
+        updateTotal();
+        view.getProductsTable().refresh();
+        loadTodayHistory();
+        showAlert("Success", "Transaction Completed!");
+    }
+
+    private void printBill() {
+        double total = cart.stream().mapToDouble(p -> p.getSellingPrice() * p.getStockQuantity()).sum();
+
+        // Используем модель Bill для форматирования
+        Bill billObj = new Bill(new ArrayList<>(cart), currentUser, total);
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(billObj.getFileName()))) {
+            writer.print(billObj.getFormattedBill());
+        } catch (IOException e) {
+            showAlert("Error", "Bill printing failed.");
+        }
+    }
+
+    private void loadTodayHistory() {
+        File folder = new File(".");
+        File[] files = folder.listFiles();
+        ObservableList<String> history = FXCollections.observableArrayList();
+        String today = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+        if (files != null) {
+            for (File f : files) {
+                if (f.getName().startsWith("Bill_" + today) && f.getName().endsWith(".txt")) {
+                    if (isMine(f)) {
+                        history.add(f.getName() + " | " + extractTotal(f) + " $");
+                    }
+                }
+            }
+        }
+        view.getHistoryList().setItems(history);
+        view.getLblHistoryTotal().setText("Today's Bills: " + history.size());
+    }
+
+    private boolean isMine(File f) {
+        try (Scanner sc = new Scanner(f)) {
+            while (sc.hasNextLine()) if (sc.nextLine().contains("Cashier: " + currentUser.getFullName())) return true;
+        } catch (Exception e) {} return false;
+    }
+
+    private String extractTotal(File f) {
+        try (Scanner sc = new Scanner(f)) {
+            while (sc.hasNextLine()) {
+                String l = sc.nextLine();
+                if (l.startsWith("TOTAL AMOUNT:")) return l.replaceAll("[^0-9.]", "");
+            }
+        } catch (Exception e) {} return "0.00";
     }
 
     private void removeFromCart() {
@@ -145,46 +187,7 @@ public class CashierController {
         view.getLblTotal().setText("Total: " + String.format("%.2f", total) + " $");
     }
 
-    private void checkout() {
-        if (cart.isEmpty()) return;
-        for (Product cartItem : cart) {
-            for (Product stockItem : allProducts) {
-                if (stockItem.getName().equals(cartItem.getName())) {
-                    stockItem.setStockQuantity(stockItem.getStockQuantity() - cartItem.getStockQuantity());
-                    break;
-                }
-            }
-        }
-
-        // SAVE USING IOHANDLER
-        IOHandler.saveList(PRODUCTS_FILE, new ArrayList<>(allProducts));
-
-        printBill();
-        cart.clear();
-        updateTotal();
-        view.getProductsTable().refresh();
-        loadTodayHistory();
-        showAlert("Success", "Bill printed!");
-    }
-
-    private void printBill() {
-        double total = cart.stream().mapToDouble(p -> p.getSellingPrice() * p.getStockQuantity()).sum();
-
-        // creating object bill
-        Bill billObject = new Bill(new ArrayList<>(cart), currentUser, total);
-
-        // print using method in bill class
-        try (PrintWriter writer = new PrintWriter(new FileWriter(billObject.getFileName()))) {
-            writer.print(billObject.getFormattedBill());
-        } catch (IOException e) {
-            showAlert("Error", "Print failed: " + e.getMessage());
-        }
-    }
-
     private void showAlert(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setContentText(content);
-        alert.showAndWait();
+        new Alert(Alert.AlertType.INFORMATION, content).showAndWait();
     }
 }

@@ -11,241 +11,176 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 public class ManagerView extends VBox {
+    // Inventory
     private TableView<Product> productTable;
-    private TextField tfName, tfBuyPrice, tfSellPrice, tfQuantity;
-    private ComboBox<String> cbCategory; // ТЕПЕРЬ ЭТО ВЫБОР
-    private ComboBox<String> cbSupplier;
+    private TextField tfName, tfBuyPrice, tfSellPrice, tfQuantity, tfDiscount;
+    private ComboBox<String> cbCategory, cbSupplier;
     private Button btnAddProduct, btnUpdateProduct, btnDeleteProduct, btnClearForm;
     private TextField tfSearch;
     private Label lblAlert;
 
-    private ListView<String> supplierList;
-    private TextField tfNewSupplier;
-    private Button btnAddSupplier, btnRemoveSupplier;
+    // Suppliers & Categories
+    private ListView<String> supplierList, categoryList;
+    private TextField tfNewSupplier, tfNewCategory;
+    private Button btnAddSupplier, btnRemoveSupplier, btnAddCategory, btnRemoveCategory;
 
-    private ListView<String> categoryList;
-    private TextField tfNewCategory;
-    private Button btnAddCategory, btnRemoveCategory;
-
-    private MenuItem miLogoutStub = new MenuItem();
+    // Stats
+    private TableView<CashierMetric> cashierTable;
+    private DatePicker dpStart, dpEnd;
+    private Button btnRefreshStats;
+    private Label lblTotalItems, lblTotalRevenue;
 
     public ManagerView() {
         setPadding(new Insets(20));
         setSpacing(20);
         setStyle("-fx-background-color: #F3F4F6;");
 
-        // HEADER
+        // Header
         HBox header = new HBox(20);
         header.setAlignment(Pos.CENTER_LEFT);
-
-        Label title = new Label("Inventory Management");
+        Label title = new Label("Managerial Control Center");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 22));
-        title.setStyle("-fx-text-fill: #1F2937;");
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        Region sp = new Region(); HBox.setHgrow(sp, Priority.ALWAYS);
+        lblAlert = new Label("Checking Inventory...");
+        lblAlert.setStyle("-fx-padding: 5 15; -fx-background-radius: 15; -fx-background-color: #DBEAFE; -fx-text-fill: #1E40AF; -fx-font-weight: bold;");
+        header.getChildren().addAll(title, sp, lblAlert);
 
-        lblAlert = new Label("Checking stock...");
-        lblAlert.setStyle("-fx-padding: 8 15; -fx-background-radius: 20; -fx-background-color: #E5E7EB; -fx-text-fill: #374151; -fx-font-weight: bold;");
-
-        header.getChildren().addAll(title, spacer, lblAlert);
-
-        // TABS
         TabPane tabPane = new TabPane();
-        tabPane.setStyle("-fx-background-color: transparent;");
         VBox.setVgrow(tabPane, Priority.ALWAYS);
 
-        Tab productsTab = new Tab("Products & Stock", createProductsTab());
-        productsTab.setClosable(false);
+        Tab inventoryTab = new Tab("Inventory & Stock", createInventoryTab());
+        Tab supplierTab = new Tab("Suppliers & Sectors", createSuppliersTab());
+        Tab statsTab = new Tab("Performance Analytics", createStatsTab());
 
-        Tab suppliersTab = new Tab("Suppliers", createSuppliersTab());
-        suppliersTab.setClosable(false);
-
-        Tab categoriesTab = new Tab("Categories (Sectors)", createCategoriesTab());
-        categoriesTab.setClosable(false);
-
-        tabPane.getTabs().addAll(productsTab, suppliersTab, categoriesTab);
+        tabPane.getTabs().addAll(inventoryTab, supplierTab, statsTab);
+        tabPane.getTabs().forEach(t -> t.setClosable(false));
 
         getChildren().addAll(header, tabPane);
     }
 
-    private Node createProductsTab() {
+    private Node createInventoryTab() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(15, 0, 0, 0));
 
-        // SEARCH
-        HBox tools = new HBox(10);
-        tfSearch = new TextField();
-        tfSearch.setPromptText("Search by Name...");
-        tfSearch.setPrefWidth(300);
-        tfSearch.setStyle("-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #D1D5DB;");
-        tools.getChildren().add(tfSearch);
+        tfSearch = new TextField(); tfSearch.setPromptText("Search by product name or sector...");
+        tfSearch.setStyle("-fx-padding: 8; -fx-background-radius: 5;");
 
-        // TABLE
         productTable = new TableView<>();
         productTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         VBox.setVgrow(productTable, Priority.ALWAYS);
 
-        TableColumn<Product, String> colName = new TableColumn<>("Product Name");
-        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        TableColumn<Product, String> cName = new TableColumn<>("Product");
+        cName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        TableColumn<Product, String> cCat = new TableColumn<>("Sector");
+        cCat.setCellValueFactory(new PropertyValueFactory<>("category"));
+        TableColumn<Product, Integer> cQty = new TableColumn<>("Stock");
+        cQty.setCellValueFactory(new PropertyValueFactory<>("stockQuantity"));
+        TableColumn<Product, Double> cSell = new TableColumn<>("Price ($)");
+        cSell.setCellValueFactory(new PropertyValueFactory<>("sellingPrice"));
+        TableColumn<Product, Double> cDisc = new TableColumn<>("Discount (%)");
+        cDisc.setCellValueFactory(new PropertyValueFactory<>("discount"));
 
-        TableColumn<Product, String> colCat = new TableColumn<>("Category");
-        colCat.setCellValueFactory(new PropertyValueFactory<>("category"));
+        productTable.getColumns().addAll(cName, cCat, cQty, cSell, cDisc);
 
-        TableColumn<Product, String> colSup = new TableColumn<>("Supplier");
-        colSup.setCellValueFactory(new PropertyValueFactory<>("supplier"));
+        // Form
+        GridPane form = new GridPane(); form.setHgap(10); form.setVgap(10);
+        form.setPadding(new Insets(15));
+        form.setStyle("-fx-background-color: white; -fx-background-radius: 8;");
 
-        TableColumn<Product, Integer> colStock = new TableColumn<>("Qty");
-        colStock.setCellValueFactory(new PropertyValueFactory<>("stockQuantity"));
-        colStock.setStyle("-fx-font-weight: bold;");
+        tfName = new TextField(); tfBuyPrice = new TextField(); tfSellPrice = new TextField();
+        tfQuantity = new TextField(); tfDiscount = new TextField();
+        cbCategory = new ComboBox<>(); cbSupplier = new ComboBox<>();
 
-        TableColumn<Product, Double> colBuy = new TableColumn<>("Buy ($)");
-        colBuy.setCellValueFactory(new PropertyValueFactory<>("purchasePrice"));
+        cbCategory.setPromptText("Sector"); cbSupplier.setPromptText("Supplier");
+        tfDiscount.setPromptText("0.0");
 
-        TableColumn<Product, Double> colSell = new TableColumn<>("Sell ($)");
-        colSell.setCellValueFactory(new PropertyValueFactory<>("sellingPrice"));
+        form.addRow(0, new Label("Name:"), tfName, new Label("Sector:"), cbCategory, new Label("Supplier:"), cbSupplier);
+        form.addRow(1, new Label("Buy Price:"), tfBuyPrice, new Label("Sell Price:"), tfSellPrice, new Label("Qty:"), tfQuantity);
+        form.addRow(2, new Label("Apply Discount (%):"), tfDiscount);
 
-        productTable.getColumns().addAll(colName, colCat, colSup, colStock, colBuy, colSell);
-
-        VBox formCard = new VBox(15);
-        formCard.setPadding(new Insets(20));
-        formCard.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 1);");
-
-        GridPane form = new GridPane();
-        form.setHgap(15); form.setVgap(15);
-
-        tfName = styledField("Name");
-
-        cbCategory = new ComboBox<>();
-        cbCategory.setPromptText("Select Category");
-        cbCategory.setPrefWidth(200);
-
-        cbSupplier = new ComboBox<>();
-        cbSupplier.setPromptText("Select Supplier");
-        cbSupplier.setPrefWidth(200);
-
-        tfQuantity = styledField("Quantity");
-        tfBuyPrice = styledField("Buy Price");
-        tfSellPrice = styledField("Sell Price");
-
-        form.addRow(0, new Label("Info:"), tfName, cbCategory, cbSupplier);
-        form.addRow(1, new Label("Pricing:"), tfQuantity, tfBuyPrice, tfSellPrice);
-
-        HBox actions = new HBox(15);
-        btnAddProduct = new Button("Add");
-        btnAddProduct.setStyle("-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold;");
-
+        HBox actions = new HBox(10);
+        btnAddProduct = new Button("Supply/Add"); btnAddProduct.setStyle("-fx-background-color: #10B981; -fx-text-fill: white;");
         btnUpdateProduct = new Button("Update");
-        btnUpdateProduct.setStyle("-fx-background-color: #3B82F6; -fx-text-fill: white; -fx-font-weight: bold;");
-
-        btnDeleteProduct = new Button("Delete");
-        btnDeleteProduct.setStyle("-fx-background-color: #EF4444; -fx-text-fill: white; -fx-font-weight: bold;");
-
+        btnDeleteProduct = new Button("Delete"); btnDeleteProduct.setStyle("-fx-background-color: #EF4444; -fx-text-fill: white;");
         btnClearForm = new Button("Clear");
-
         actions.getChildren().addAll(btnAddProduct, btnUpdateProduct, btnDeleteProduct, btnClearForm);
-        formCard.getChildren().addAll(form, new Separator(), actions);
 
-        layout.getChildren().addAll(tools, productTable, formCard);
+        layout.getChildren().addAll(tfSearch, productTable, form, actions);
+        return layout;
+    }
+
+    private Node createStatsTab() {
+        VBox layout = new VBox(15);
+        layout.setPadding(new Insets(15));
+
+        HBox filter = new HBox(10, new Label("Period:"), dpStart = new DatePicker(), dpEnd = new DatePicker(), btnRefreshStats = new Button("View Metrics"));
+        filter.setAlignment(Pos.CENTER_LEFT);
+
+        cashierTable = new TableView<>();
+        cashierTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        TableColumn<CashierMetric, String> c1 = new TableColumn<>("Cashier");
+        c1.setCellValueFactory(new PropertyValueFactory<>("name"));
+        TableColumn<CashierMetric, Integer> c2 = new TableColumn<>("Bills");
+        c2.setCellValueFactory(new PropertyValueFactory<>("billCount"));
+        TableColumn<CashierMetric, Double> c3 = new TableColumn<>("Revenue");
+        c3.setCellValueFactory(new PropertyValueFactory<>("revenue"));
+        cashierTable.getColumns().addAll(c1, c2, c3);
+
+        HBox footer = new HBox(20, lblTotalItems = new Label("Total Items: 0"), lblTotalRevenue = new Label("Total Revenue: 0.00 $"));
+        footer.setStyle("-fx-font-weight: bold;");
+
+        layout.getChildren().addAll(filter, cashierTable, footer);
         return layout;
     }
 
     private Node createSuppliersTab() {
-        HBox layout = new HBox(20);
-        layout.setPadding(new Insets(20));
-        layout.setAlignment(Pos.TOP_CENTER);
+        HBox layout = new HBox(20); layout.setPadding(new Insets(15));
 
-        VBox listBox = new VBox(10);
-        listBox.setPrefWidth(300);
+        VBox sBox = new VBox(10, new Label("Manage Suppliers"), supplierList = new ListView<>(), tfNewSupplier = new TextField(), btnAddSupplier = new Button("Register Supplier"), btnRemoveSupplier = new Button("Remove"));
+        VBox cBox = new VBox(10, new Label("Manage Sectors"), categoryList = new ListView<>(), tfNewCategory = new TextField(), btnAddCategory = new Button("Add Sector"), btnRemoveCategory = new Button("Remove"));
 
-        supplierList = new ListView<>();
-        VBox.setVgrow(supplierList, Priority.ALWAYS);
-        btnRemoveSupplier = new Button("Remove Selected");
-        btnRemoveSupplier.setMaxWidth(Double.MAX_VALUE);
-
-        listBox.getChildren().addAll(new Label("Suppliers List"), supplierList, btnRemoveSupplier);
-
-        VBox addBox = new VBox(15);
-        addBox.setPrefWidth(300);
-        addBox.setPadding(new Insets(20));
-        addBox.setStyle("-fx-background-color: white; -fx-background-radius: 8;");
-
-        tfNewSupplier = styledField("New Supplier Name");
-        btnAddSupplier = new Button("Add Supplier");
-        btnAddSupplier.setStyle("-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold;");
-        btnAddSupplier.setMaxWidth(Double.MAX_VALUE);
-
-        addBox.getChildren().addAll(new Label("Add New Supplier"), tfNewSupplier, btnAddSupplier);
-
-        layout.getChildren().addAll(listBox, addBox);
+        HBox.setHgrow(sBox, Priority.ALWAYS); HBox.setHgrow(cBox, Priority.ALWAYS);
+        layout.getChildren().addAll(sBox, cBox);
         return layout;
     }
 
-    // NEW WINDOW CATEGORY
-    private Node createCategoriesTab() {
-        HBox layout = new HBox(20);
-        layout.setPadding(new Insets(20));
-        layout.setAlignment(Pos.TOP_CENTER);
-
-        // LIST OF CATEGORY
-        VBox listBox = new VBox(10);
-        listBox.setPrefWidth(300);
-
-        categoryList = new ListView<>();
-        VBox.setVgrow(categoryList, Priority.ALWAYS);
-        btnRemoveCategory = new Button("Remove Selected");
-        btnRemoveCategory.setMaxWidth(Double.MAX_VALUE);
-
-        listBox.getChildren().addAll(new Label("Product Categories (Sectors)"), categoryList, btnRemoveCategory);
-
-        // ADDING CATEGORY
-        VBox addBox = new VBox(15);
-        addBox.setPrefWidth(300);
-        addBox.setPadding(new Insets(20));
-        addBox.setStyle("-fx-background-color: white; -fx-background-radius: 8;");
-
-        tfNewCategory = styledField("New Category Name");
-        btnAddCategory = new Button("Add Category");
-        btnAddCategory.setStyle("-fx-background-color: #8B5CF6; -fx-text-fill: white; -fx-font-weight: bold;"); // Фиолетовый цвет
-        btnAddCategory.setMaxWidth(Double.MAX_VALUE);
-
-        addBox.getChildren().addAll(new Label("Add New Category"), tfNewCategory, btnAddCategory);
-
-        layout.getChildren().addAll(listBox, addBox);
-        return layout;
+    // Static Metric Class
+    public static class CashierMetric {
+        private String name; private int billCount; private double revenue;
+        public CashierMetric(String n, int b, double r) { this.name = n; this.billCount = b; this.revenue = r; }
+        public String getName() { return name; }
+        public int getBillCount() { return billCount; }
+        public double getRevenue() { return revenue; }
     }
 
-    private TextField styledField(String prompt) {
-        TextField tf = new TextField();
-        tf.setPromptText(prompt);
-        tf.setStyle("-fx-padding: 6; -fx-border-color: #D1D5DB; -fx-border-radius: 4;");
-        return tf;
-    }
-
+    // Getters
     public TableView<Product> getProductTable() { return productTable; }
     public TextField getTfName() { return tfName; }
-    public ComboBox<String> getCbCategory() { return cbCategory; } // Теперь ComboBox
+    public ComboBox<String> getCbCategory() { return cbCategory; }
     public ComboBox<String> getCbSupplier() { return cbSupplier; }
     public TextField getTfBuyPrice() { return tfBuyPrice; }
     public TextField getTfSellPrice() { return tfSellPrice; }
     public TextField getTfQuantity() { return tfQuantity; }
-    public TextField getTfSearch() { return tfSearch; }
-    public Label getLblAlert() { return lblAlert; }
-
+    public TextField getTfDiscount() { return tfDiscount; }
     public Button getBtnAddProduct() { return btnAddProduct; }
     public Button getBtnUpdateProduct() { return btnUpdateProduct; }
     public Button getBtnDeleteProduct() { return btnDeleteProduct; }
     public Button getBtnClearForm() { return btnClearForm; }
-
+    public TextField getTfSearch() { return tfSearch; }
     public ListView<String> getSupplierList() { return supplierList; }
     public TextField getTfNewSupplier() { return tfNewSupplier; }
     public Button getBtnAddSupplier() { return btnAddSupplier; }
     public Button getBtnRemoveSupplier() { return btnRemoveSupplier; }
-
     public ListView<String> getCategoryList() { return categoryList; }
     public TextField getTfNewCategory() { return tfNewCategory; }
     public Button getBtnAddCategory() { return btnAddCategory; }
     public Button getBtnRemoveCategory() { return btnRemoveCategory; }
-
-    public MenuItem getMiLogout() { return miLogoutStub; }
+    public Label getLblAlert() { return lblAlert; }
+    public TableView<CashierMetric> getCashierTable() { return cashierTable; }
+    public DatePicker getDpStart() { return dpStart; }
+    public DatePicker getDpEnd() { return dpEnd; }
+    public Button getBtnRefreshStats() { return btnRefreshStats; }
+    public Label getLblTotalItems() { return lblTotalItems; }
+    public Label getLblTotalRevenue() { return lblTotalRevenue; }
 }

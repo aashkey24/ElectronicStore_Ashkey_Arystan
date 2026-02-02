@@ -10,123 +10,134 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 public class CashierPane extends BorderPane {
-    // Products
+    // Таблицы
     private TableView<Product> productsTable;
-    private TextField tfSearch, tfQuantity;
-    private Button btnAddToCart;
-
-    // CART
     private TableView<Product> cartTable;
-    private Button btnRemoveFromCart, btnCheckout;
+
+    // Поля и кнопки
+    private TextField tfSearch, tfQuantity;
+    private Button btnAddToCart, btnRemoveFromCart, btnCheckout;
     private Label lblTotal;
 
-    //Today's History
-    private ListView<String> historyList; // Простой список "Чек #1 - 50$"
-    private Label lblHistoryTotal; // "Total Bills Today: 5"
+    // История
+    private ListView<String> historyList;
+    private Label lblHistoryTotal;
 
     public CashierPane() {
+        setPadding(new Insets(10));
         setStyle("-fx-background-color: #F3F4F6;");
 
-        VBox leftPane = new VBox(10);
+        // --- ЛЕВАЯ ПАНЕЛЬ: ТОВАРЫ ---
+        VBox leftPane = new VBox(15);
         leftPane.setPadding(new Insets(15));
-        leftPane.setStyle("-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 1);");
+        leftPane.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 1);");
+        leftPane.setMinWidth(450);
 
-        Label lblProd = new Label("Available Products");
-        lblProd.setFont(Font.font("Segoe UI", FontWeight.BOLD, 16));
+        Label lblTitle = new Label("Store Inventory");
+        lblTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
 
         tfSearch = new TextField();
-        tfSearch.setPromptText("Search Product...");
-        tfSearch.setStyle("-fx-padding: 8; -fx-border-color: #D1D5DB; -fx-background-radius: 4;");
+        tfSearch.setPromptText("🔍 Quick search products...");
+        tfSearch.setStyle("-fx-padding: 8; -fx-background-radius: 5; -fx-border-color: #D1D5DB; -fx-border-radius: 5;");
 
         productsTable = new TableView<>();
         productsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         VBox.setVgrow(productsTable, Priority.ALWAYS);
 
-        TableColumn<Product, String> colName = new TableColumn<>("Name");
+        TableColumn<Product, String> colName = new TableColumn<>("Product");
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
 
         TableColumn<Product, Double> colPrice = new TableColumn<>("Price ($)");
         colPrice.setCellValueFactory(new PropertyValueFactory<>("sellingPrice"));
 
+        TableColumn<Product, Double> colDisc = new TableColumn<>("Disc %");
+        colDisc.setCellValueFactory(new PropertyValueFactory<>("discount"));
+        colDisc.setPrefWidth(60);
+
         TableColumn<Product, Integer> colStock = new TableColumn<>("Stock");
         colStock.setCellValueFactory(new PropertyValueFactory<>("stockQuantity"));
+        colStock.setPrefWidth(60);
 
-        productsTable.getColumns().addAll(colName, colPrice, colStock);
+        productsTable.getColumns().addAll(colName, colPrice, colDisc, colStock);
 
-        HBox cartActions = new HBox(10);
+        HBox actionBox = new HBox(10);
+        actionBox.setAlignment(Pos.CENTER_LEFT);
         tfQuantity = new TextField();
         tfQuantity.setPromptText("Qty");
-        tfQuantity.setPrefWidth(60);
+        tfQuantity.setPrefWidth(70);
+        tfQuantity.setStyle("-fx-padding: 8;");
+
         btnAddToCart = new Button("Add to Cart");
-        btnAddToCart.setStyle("-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold;");
-        cartActions.getChildren().addAll(tfQuantity, btnAddToCart);
+        btnAddToCart.setPrefWidth(150);
+        btnAddToCart.setStyle("-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8; -fx-cursor: hand;");
 
-        leftPane.getChildren().addAll(lblProd, tfSearch, productsTable, cartActions);
+        actionBox.getChildren().addAll(new Label("Qty:"), tfQuantity, btnAddToCart);
+        leftPane.getChildren().addAll(lblTitle, tfSearch, productsTable, actionBox);
 
+        // --- ПРАВАЯ ПАНЕЛЬ: КОРЗИНА И ИСТОРИЯ ---
         SplitPane rightSplit = new SplitPane();
         rightSplit.setOrientation(javafx.geometry.Orientation.VERTICAL);
-        rightSplit.setStyle("-fx-background-color: transparent;");
+        rightSplit.setStyle("-fx-background-color: transparent; -fx-padding: 0 0 0 10;");
 
-        // Current Cart
-        VBox cartPane = new VBox(10);
-        cartPane.setPadding(new Insets(15));
-        cartPane.setStyle("-fx-background-color: white;");
+        // 1. Текущая корзина
+        VBox cartBox = new VBox(10);
+        cartBox.setPadding(new Insets(15));
+        cartBox.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
 
-        Label lblCart = new Label("Current Bill (Cart)");
+        Label lblCart = new Label("Current Sale");
         lblCart.setFont(Font.font("Segoe UI", FontWeight.BOLD, 16));
 
         cartTable = new TableView<>();
         cartTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        VBox.setVgrow(cartTable, Priority.ALWAYS);
-
-        TableColumn<Product, String> cartName = new TableColumn<>("Item");
-        cartName.setCellValueFactory(new PropertyValueFactory<>("name"));
-
-        TableColumn<Product, Double> cartPrice = new TableColumn<>("Price");
-        cartPrice.setCellValueFactory(new PropertyValueFactory<>("sellingPrice"));
-
+        TableColumn<Product, String> cartItem = new TableColumn<>("Item");
+        cartItem.setCellValueFactory(new PropertyValueFactory<>("name"));
         TableColumn<Product, Integer> cartQty = new TableColumn<>("Qty");
         cartQty.setCellValueFactory(new PropertyValueFactory<>("stockQuantity"));
-
-        cartTable.getColumns().addAll(cartName, cartPrice, cartQty);
+        TableColumn<Product, Double> cartPrice = new TableColumn<>("Total");
+        cartPrice.setCellValueFactory(new PropertyValueFactory<>("sellingPrice"));
+        cartTable.getColumns().addAll(cartItem, cartQty, cartPrice);
 
         btnRemoveFromCart = new Button("Remove Item");
+        btnRemoveFromCart.setStyle("-fx-text-fill: #EF4444; -fx-background-color: transparent; -fx-border-color: #EF4444; -fx-border-radius: 5;");
+
         lblTotal = new Label("Total: 0.00 $");
-        lblTotal.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+        lblTotal.setFont(Font.font("Segoe UI", FontWeight.BOLD, 22));
+        lblTotal.setStyle("-fx-text-fill: #1F2937;");
 
-        btnCheckout = new Button("Checkout & Print");
+        btnCheckout = new Button("COMPLETE TRANSACTION");
         btnCheckout.setMaxWidth(Double.MAX_VALUE);
-        btnCheckout.setStyle("-fx-background-color: #3B82F6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10;");
+        btnCheckout.setStyle("-fx-background-color: #3B82F6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 12; -fx-font-size: 14px; -fx-cursor: hand;");
 
-        cartPane.getChildren().addAll(lblCart, cartTable, btnRemoveFromCart, new Separator(), lblTotal, btnCheckout);
+        cartBox.getChildren().addAll(lblCart, cartTable, btnRemoveFromCart, new Separator(), lblTotal, btnCheckout);
 
-        // Today's History
-        VBox historyPane = new VBox(10);
-        historyPane.setPadding(new Insets(15));
-        historyPane.setStyle("-fx-background-color: #F9FAFB;");
+        // 2. История за сегодня
+        VBox historyBox = new VBox(10);
+        historyBox.setPadding(new Insets(15));
+        historyBox.setStyle("-fx-background-color: #F9FAFB; -fx-background-radius: 10;");
 
-        Label lblHist = new Label("Today's Sales History");
+        Label lblHist = new Label("Your Sales Today");
         lblHist.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
 
         historyList = new ListView<>();
         VBox.setVgrow(historyList, Priority.ALWAYS);
 
-        lblHistoryTotal = new Label("Bills Generated Today: 0");
+        lblHistoryTotal = new Label("Bills Generated: 0");
         lblHistoryTotal.setStyle("-fx-text-fill: #6B7280; -fx-font-weight: bold;");
 
-        historyPane.getChildren().addAll(lblHist, historyList, lblHistoryTotal);
+        historyBox.getChildren().addAll(lblHist, historyList, lblHistoryTotal);
 
-        rightSplit.getItems().addAll(cartPane, historyPane);
-        rightSplit.setDividerPositions(0.6);
+        rightSplit.getItems().addAll(cartBox, historyBox);
+        rightSplit.setDividerPositions(0.65);
 
-        // Main Layout
-        SplitPane mainSplit = new SplitPane();
-        mainSplit.getItems().addAll(leftPane, rightSplit);
-        mainSplit.setDividerPositions(0.4);
+        // Main Split
+        SplitPane mainSplit = new SplitPane(leftPane, rightSplit);
+        mainSplit.setDividerPositions(0.45);
+        mainSplit.setStyle("-fx-background-color: transparent;");
 
         setCenter(mainSplit);
     }
 
+    // Getters
     public TableView<Product> getProductsTable() { return productsTable; }
     public TableView<Product> getCartTable() { return cartTable; }
     public TextField getTfSearch() { return tfSearch; }
@@ -135,7 +146,6 @@ public class CashierPane extends BorderPane {
     public Button getBtnRemoveFromCart() { return btnRemoveFromCart; }
     public Button getBtnCheckout() { return btnCheckout; }
     public Label getLblTotal() { return lblTotal; }
-
     public ListView<String> getHistoryList() { return historyList; }
     public Label getLblHistoryTotal() { return lblHistoryTotal; }
 }

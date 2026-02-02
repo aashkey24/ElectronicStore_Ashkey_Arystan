@@ -5,11 +5,8 @@ import java.time.LocalDate;
 
 public class Product implements Serializable {
     private static final long serialVersionUID = 1L;
-    private String name;
-    private String category;
-    private String supplier;
-    private double purchasePrice;
-    private double sellingPrice;
+    private String name, category, supplier;
+    private double purchasePrice, sellingPrice, discount;
     private int stockQuantity;
     private LocalDate purchaseDate;
 
@@ -20,44 +17,28 @@ public class Product implements Serializable {
         this.purchasePrice = purchasePrice;
         this.sellingPrice = sellingPrice;
         this.stockQuantity = stockQuantity;
+        this.discount = 0.0;
         this.purchaseDate = LocalDate.now();
     }
 
+    // Getters
     public String getName() { return name; }
     public String getCategory() { return category; }
     public String getSupplier() { return supplier; }
     public double getPurchasePrice() { return purchasePrice; }
     public double getSellingPrice() { return sellingPrice; }
     public int getStockQuantity() { return stockQuantity; }
-    public LocalDate getPurchaseDate() { return purchaseDate; }
+    public double getDiscount() { return discount; }
 
+    // Setters
+    public void setStockQuantity(int stockQuantity) { this.stockQuantity = stockQuantity; }
+    public void setDiscount(double discount) { this.discount = discount; }
+    public void setPurchasePrice(double purchasePrice) { this.purchasePrice = purchasePrice; }
+    public void setSellingPrice(double sellingPrice) { this.sellingPrice = sellingPrice; }
+    public void setCategory(String category) { this.category = category; }
+    public void setSupplier(String supplier) { this.supplier = supplier; }
 
-    public void setStockQuantity(int stockQuantity) {
-        this.stockQuantity = stockQuantity;
-    }
-
-    public void setPurchasePrice(double purchasePrice) {
-        this.purchasePrice = purchasePrice;
-    }
-
-    public void setSellingPrice(double sellingPrice) {
-        this.sellingPrice = sellingPrice;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public void setSupplier(String supplier) {
-        this.supplier = supplier;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        return name + " (" + stockQuantity + ")";
+    public double getDiscountedPrice() {
+        return sellingPrice * (1 - (discount / 100.0));
     }
 }
