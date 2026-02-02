@@ -1,7 +1,12 @@
 package com.store.model;
 
+import java.time.LocalDate;
+
 public class Manager extends User {
-    public Manager(String username, String password, String fullName) {
-        super(username, password, fullName, "Manager");
+    private static final long serialVersionUID = 1L;
+
+    public Manager(String username, String password, String fullName,
+                   LocalDate dob, String phone, String email, double salary) {
+        super(username, password, fullName, "Manager", dob, phone, email, salary);
     }
 }

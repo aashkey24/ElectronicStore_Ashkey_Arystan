@@ -1,87 +1,165 @@
 package com.store.view;
 
 import com.store.model.User;
-import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 public class AdminPane extends VBox {
-    // Элементы управления делаем private, но даем к ним доступ через getters
     private TableView<User> userTable;
-    private TextField nameField, userField, passField;
-    private ComboBox<String> roleBox;
-    private Button addBtn, removeBtn;
+    private TextField tfUsername, tfPassword, tfName, tfPhone, tfEmail, tfSalary;
+    private DatePicker dpDob;
+    private ComboBox<String> cbRole;
+    private Button btnAdd, btnUpdate, btnDelete, btnClear;
 
-    @SuppressWarnings("unchecked")
+    // Финансы
+    private DatePicker dpStart, dpEnd;
+    private Button btnCalculate;
+    private Label lblTotalSales, lblTotalCosts, lblProfit;
+
+    private MenuItem miLogoutStub = new MenuItem();
+
     public AdminPane() {
-        setSpacing(15);
         setPadding(new Insets(20));
-        setAlignment(Pos.TOP_CENTER);
+        setSpacing(20);
+        setStyle("-fx-background-color: #F3F4F6;");
 
-        // Заголовок
-        Label header = new Label("STAFF MANAGEMENT (ADMIN)");
-        header.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        // --- ЧАСТЬ 1: ТАБЛИЦА (Теперь занимает все свободное место) ---
+        VBox tableCard = new VBox(10);
+        tableCard.setPadding(new Insets(15));
+        tableCard.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
 
-        // 1. Таблица сотрудников
+        // РАСТЯГИВАЕМ КАРТОЧКУ С ТАБЛИЦЕЙ
+        VBox.setVgrow(tableCard, Priority.ALWAYS);
+
+        Label lblTable = new Label("Employee Management");
+        lblTable.setFont(Font.font("Segoe UI", FontWeight.BOLD, 16));
+
         userTable = new TableView<>();
         userTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        userTable.setPrefHeight(300);
 
-        TableColumn<User, String> nameCol = new TableColumn<>("Full Name");
-        nameCol.setCellValueFactory(new PropertyValueFactory<>("fullName"));
+        // РАСТЯГИВАЕМ САМУ ТАБЛИЦУ ВНУТРИ КАРТОЧКИ
+        VBox.setVgrow(userTable, Priority.ALWAYS);
 
-        TableColumn<User, String> userCol = new TableColumn<>("Username");
-        userCol.setCellValueFactory(new PropertyValueFactory<>("username"));
+        TableColumn<User, String> colName = new TableColumn<>("Full Name");
+        colName.setCellValueFactory(new PropertyValueFactory<>("fullName"));
 
-        TableColumn<User, String> roleCol = new TableColumn<>("Role");
-        roleCol.setCellValueFactory(new PropertyValueFactory<>("role"));
+        TableColumn<User, String> colRole = new TableColumn<>("Role");
+        colRole.setCellValueFactory(new PropertyValueFactory<>("role"));
 
-        userTable.getColumns().addAll(nameCol, userCol, roleCol);
+        TableColumn<User, Double> colSalary = new TableColumn<>("Salary ($)");
+        colSalary.setCellValueFactory(new PropertyValueFactory<>("salary"));
 
-        // 2. Форма добавления (GridPane для красоты)
+        TableColumn<User, String> colPhone = new TableColumn<>("Phone");
+        colPhone.setCellValueFactory(new PropertyValueFactory<>("phone"));
+
+        userTable.getColumns().addAll(colName, colRole, colSalary, colPhone);
+        tableCard.getChildren().addAll(lblTable, userTable);
+
+        // --- ЧАСТЬ 2: ФОРМА И СТАТИСТИКА (Внизу, фиксированный размер) ---
+        HBox bottomSection = new HBox(20); // Ставим Форму и Статистику рядом (слева и справа)
+        bottomSection.setPrefHeight(320);  // Фиксируем высоту нижней части
+
+        // 2.1 Форма ввода
+        VBox formCard = new VBox(15);
+        formCard.setPadding(new Insets(20));
+        formCard.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
+        HBox.setHgrow(formCard, Priority.ALWAYS); // Форма занимает 60-70% ширины
+
         GridPane form = new GridPane();
-        form.setHgap(10); form.setVgap(10);
-        form.setAlignment(Pos.CENTER);
-        form.setPadding(new Insets(10));
-        form.setStyle("-fx-background-color: #ecf0f1; -fx-background-radius: 5;");
+        form.setHgap(15); form.setVgap(15);
 
-        nameField = new TextField(); nameField.setPromptText("Full Name");
-        userField = new TextField(); userField.setPromptText("Username");
-        passField = new TextField(); passField.setPromptText("Password");
+        tfUsername = styledField("Username");
+        tfPassword = styledField("Password");
+        tfName = styledField("Full Name");
+        tfPhone = styledField("Phone");
+        tfEmail = styledField("Email");
+        tfSalary = styledField("Salary");
+        dpDob = new DatePicker(); dpDob.setPromptText("Date of Birth");
 
-        roleBox = new ComboBox<>(FXCollections.observableArrayList("Manager", "Cashier", "Administrator"));
-        roleBox.setValue("Cashier");
-        roleBox.setPrefWidth(150);
+        cbRole = new ComboBox<>();
+        cbRole.getItems().addAll("Manager", "Cashier", "Administrator");
+        cbRole.setValue("Cashier");
 
-        form.add(new Label("Full Name:"), 0, 0); form.add(nameField, 1, 0);
-        form.add(new Label("Username:"), 0, 1);  form.add(userField, 1, 1);
-        form.add(new Label("Password:"), 2, 1);  form.add(passField, 3, 1);
-        form.add(new Label("Role:"), 2, 0);      form.add(roleBox, 3, 0);
+        form.addRow(0, new Label("Account:"), tfUsername, tfPassword, cbRole);
+        form.addRow(1, new Label("Personal:"), tfName, dpDob, tfPhone);
+        form.addRow(2, new Label("Info:"), tfEmail, tfSalary);
 
-        // 3. Кнопки действий
         HBox actions = new HBox(15);
-        actions.setAlignment(Pos.CENTER);
+        btnAdd = new Button("Add");
+        btnAdd.setStyle("-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold;");
+        btnUpdate = new Button("Update");
+        btnUpdate.setStyle("-fx-background-color: #F59E0B; -fx-text-fill: white; -fx-font-weight: bold;");
+        btnDelete = new Button("Delete");
+        btnDelete.setStyle("-fx-background-color: #EF4444; -fx-text-fill: white; -fx-font-weight: bold;");
+        btnClear = new Button("Clear");
 
-        addBtn = new Button("Register New Employee");
-        addBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;");
+        actions.getChildren().addAll(btnAdd, btnUpdate, btnDelete, btnClear);
+        formCard.getChildren().addAll(new Label("Edit Details"), form, new Separator(), actions);
 
-        removeBtn = new Button("Remove Selected User");
-        removeBtn.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white;");
+        // 2.2 Статистика (Справа)
+        VBox statsCard = new VBox(15);
+        statsCard.setPadding(new Insets(20));
+        statsCard.setPrefWidth(350); // Фиксируем ширину для статистики
+        statsCard.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
 
-        actions.getChildren().addAll(addBtn, removeBtn);
+        Label lblStats = new Label("Financial Overview");
+        lblStats.setFont(Font.font("Segoe UI", FontWeight.BOLD, 16));
 
-        getChildren().addAll(header, userTable, new Separator(), new Label("Add New Staff:"), form, actions);
+        dpStart = new DatePicker(); dpStart.setPromptText("From"); dpStart.setMaxWidth(Double.MAX_VALUE);
+        dpEnd = new DatePicker(); dpEnd.setPromptText("To"); dpEnd.setMaxWidth(Double.MAX_VALUE);
+        btnCalculate = new Button("Generate Report");
+        btnCalculate.setStyle("-fx-background-color: #3B82F6; -fx-text-fill: white;");
+        btnCalculate.setMaxWidth(Double.MAX_VALUE);
+
+        GridPane results = new GridPane();
+        results.setHgap(10); results.setVgap(10);
+
+        lblTotalSales = new Label("0.0 $"); lblTotalSales.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+        lblTotalCosts = new Label("0.0 $"); lblTotalCosts.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+        lblProfit = new Label("0.0 $"); lblProfit.setStyle("-fx-text-fill: blue; -fx-font-weight: bold; -fx-font-size: 14px;");
+
+        results.addRow(0, new Label("Sales:"), lblTotalSales);
+        results.addRow(1, new Label("Costs:"), lblTotalCosts);
+        results.addRow(2, new Label("Profit:"), lblProfit);
+
+        statsCard.getChildren().addAll(lblStats, dpStart, dpEnd, btnCalculate, new Separator(), results);
+
+        bottomSection.getChildren().addAll(formCard, statsCard);
+
+        // Добавляем: Сверху Таблица (растет), Снизу Формы (фиксированы)
+        getChildren().addAll(tableCard, bottomSection);
     }
 
-    // --- Getters для Контроллера ---
+    private TextField styledField(String prompt) {
+        TextField tf = new TextField();
+        tf.setPromptText(prompt);
+        tf.setStyle("-fx-padding: 6; -fx-border-color: #D1D5DB; -fx-border-radius: 4;");
+        return tf;
+    }
+
+    // Getters остались теми же
     public TableView<User> getUserTable() { return userTable; }
-    public TextField getNameField() { return nameField; }
-    public TextField getUserField() { return userField; }
-    public TextField getPassField() { return passField; }
-    public ComboBox<String> getRoleBox() { return roleBox; }
-    public Button getAddButton() { return addBtn; }
-    public Button getRemoveButton() { return removeBtn; }
+    public TextField getTfUsername() { return tfUsername; }
+    public TextField getTfPassword() { return tfPassword; }
+    public TextField getTfName() { return tfName; }
+    public TextField getTfPhone() { return tfPhone; }
+    public TextField getTfEmail() { return tfEmail; }
+    public TextField getTfSalary() { return tfSalary; }
+    public DatePicker getDpDob() { return dpDob; }
+    public ComboBox<String> getCbRole() { return cbRole; }
+    public Button getBtnAdd() { return btnAdd; }
+    public Button getBtnUpdate() { return btnUpdate; }
+    public Button getBtnDelete() { return btnDelete; }
+    public Button getBtnClear() { return btnClear; }
+    public Button getBtnCalculate() { return btnCalculate; }
+    public Label getLblTotalSales() { return lblTotalSales; }
+    public Label getLblTotalCosts() { return lblTotalCosts; }
+    public Label getLblProfit() { return lblProfit; }
+    public DatePicker getDpStart() { return dpStart; }
+    public DatePicker getDpEnd() { return dpEnd; }
+    public MenuItem getMiLogout() { return miLogoutStub; }
 }

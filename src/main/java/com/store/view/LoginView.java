@@ -3,60 +3,78 @@ package com.store.view;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
-public class LoginView {
-    private VBox root;
+public class LoginView extends GridPane { // Наследуем от GridPane, чтобы работало setScene
+
     private TextField usernameField;
     private PasswordField passwordField;
     private Button loginButton;
 
     public LoginView() {
-        root = new VBox(20);
-        root.setAlignment(Pos.CENTER);
-        root.setPadding(new Insets(50));
-        root.setStyle("-fx-background-color: #ffffff;");
+        setAlignment(Pos.CENTER);
 
-        // --- ВСТАВКА ЛОГОТИПА ---
+        // 1. Красивый фон (Градиент)
+        setStyle("-fx-background-color: linear-gradient(to bottom right, #2c3e50, #4ca1af);");
+
+        // 2. Белая карточка по центру
+        VBox card = new VBox(20);
+        card.setAlignment(Pos.CENTER);
+        card.setPadding(new Insets(40));
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
+
+        // Эффект тени для карточки
+        DropShadow shadow = new DropShadow();
+        shadow.setColor(Color.gray(0.2));
+        shadow.setRadius(20);
+        card.setEffect(shadow);
+
+        // --- ЛОГОТИП ---
         ImageView logoView = new ImageView();
         try {
             Image logo = new Image(getClass().getResourceAsStream("/com/store/electronicstoreapp/img.png"));
             logoView.setImage(logo);
-            logoView.setFitHeight(100); // Высота логотипа (можно менять)
+            logoView.setFitHeight(80);
             logoView.setPreserveRatio(true);
-        } catch (Exception e) {
-            System.out.println("Logo image missing");
-        }
-        // ------------------------
+        } catch (Exception e) { /* Игнорируем */ }
 
-        Label title = new Label("ELECTRONIC STORE");
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 24));
-        title.setStyle("-fx-text-fill: #2c3e50;");
+        Label title = new Label("Staff Login");
+        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
+        title.setStyle("-fx-text-fill: #34495e;");
 
-
+        // Поля ввода
         usernameField = new TextField();
         usernameField.setPromptText("Username");
-        usernameField.setMaxWidth(250);
-        usernameField.setStyle("-fx-border-color: #bdc3c7; -fx-border-radius: 5;");
+        usernameField.setStyle("-fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7; -fx-border-radius: 5;");
+        usernameField.setPrefWidth(280);
 
         passwordField = new PasswordField();
         passwordField.setPromptText("Password");
-        passwordField.setMaxWidth(250);
-        passwordField.setStyle("-fx-border-color: #bdc3c7; -fx-border-radius: 5;");
+        passwordField.setStyle("-fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #bdc3c7; -fx-border-radius: 5;");
+        passwordField.setPrefWidth(280);
 
+        // Кнопка
         loginButton = new Button("SIGN IN");
-        loginButton.setMinWidth(250);
-        loginButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-cursor: hand;");
+        loginButton.setPrefWidth(280);
+        loginButton.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5; -fx-cursor: hand;");
 
-        root.getChildren().addAll(logoView, title, usernameField, passwordField, loginButton);
+        // Эффект нажатия
+        loginButton.setOnMouseEntered(e -> loginButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5;"));
+        loginButton.setOnMouseExited(e -> loginButton.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 5;"));
+
+        card.getChildren().addAll(logoView, title, usernameField, passwordField, loginButton);
+
+        // Добавляем карточку в центр GridPane
+        add(card, 0, 0);
     }
 
-    public VBox getRoot() { return root; }
-    public String getUsername() { return usernameField.getText(); }
-    public String getPassword() { return passwordField.getText(); }
+    public TextField getUsernameField() { return usernameField; }
+    public PasswordField getPasswordField() { return passwordField; }
     public Button getLoginButton() { return loginButton; }
 }

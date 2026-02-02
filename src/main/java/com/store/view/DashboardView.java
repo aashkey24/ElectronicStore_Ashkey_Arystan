@@ -2,110 +2,76 @@ package com.store.view;
 
 import com.store.model.User;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import java.util.HashMap;
-import java.util.Map;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
-public class DashboardView {
-    private BorderPane root;
-    private VBox sidebar;
+public class DashboardView extends BorderPane {
     private Button logoutBtn;
-    private StackPane contentArea;
+    private VBox sidebar;
+    private Label titleLabel;
 
-    // Храним кнопки, чтобы Контроллер мог повесить на них действия
-    private Map<String, Button> navButtons = new HashMap<>();
+    public DashboardView(User user, Node centerContent) {
+        // --- SIDEBAR (Left) ---
+        sidebar = new VBox(15);
+        sidebar.setPadding(new Insets(20));
+        sidebar.setPrefWidth(240);
+        sidebar.setStyle("-fx-background-color: #1F2937;"); // Темно-синий/серый цвет
 
-    public DashboardView(User user) {
-        root = new BorderPane();
+        // Лого и Инфо пользователя
+        VBox profileBox = new VBox(10);
+        profileBox.setAlignment(Pos.CENTER);
 
-        sidebar = new VBox(10);
-        sidebar.setPadding(new Insets(15));
-        sidebar.setStyle("-fx-background-color: #2c3e50;");
-        sidebar.setPrefWidth(220);
-
-        // --- ЛОГОТИП (ВСТАВКА) ---
-        ImageView menuLogo = new ImageView();
+        ImageView logo = new ImageView();
         try {
-            // Убедись, что импорты добавлены: import javafx.scene.image.*;
-            Image img = new Image(getClass().getResourceAsStream("/com/store/electronicstoreapp/img.png"));
-            menuLogo.setImage(img);
-            menuLogo.setFitWidth(100);
-            menuLogo.setPreserveRatio(true);
+            logo.setImage(new Image(getClass().getResourceAsStream("/com/store/electronicstoreapp/img.png")));
+            logo.setFitWidth(80);
+            logo.setPreserveRatio(true);
+        } catch (Exception e) {}
 
-            HBox logoContainer = new HBox(menuLogo);
-            logoContainer.setAlignment(javafx.geometry.Pos.CENTER);
-            logoContainer.setPadding(new Insets(0, 0, 10, 0));
+        Label nameLbl = new Label(user.getFullName());
+        nameLbl.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;");
 
-            sidebar.getChildren().add(logoContainer);
-        } catch (Exception e) {
-            // Игнорируем ошибку, если картинки нет
-        }
-        // -------------------------
+        Label roleLbl = new Label(user.getRole().toUpperCase());
+        roleLbl.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 12px; -fx-background-color: #374151; -fx-padding: 2 8 2 8; -fx-background-radius: 10;");
 
-        // ИСПРАВЛЕНИЕ ОШИБКИ ЗДЕСЬ:
-        Label welcome = new Label("Welcome,\n" + user.getFullName()); // Используем user.getFullName()
-        welcome.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
+        profileBox.getChildren().addAll(logo, nameLbl, roleLbl);
 
-        Label roleLabel = new Label("[" + user.getRole() + "]"); // Используем user.getRole()
-        roleLabel.setStyle("-fx-text-fill: #bdc3c7; -fx-font-size: 12px;");
+        // Меню (пока просто декоративное, так как роль определяет один экран)
+        Label menuTitle = new Label("MAIN MENU");
+        menuTitle.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 10px; -fx-font-weight: bold;");
 
-        sidebar.getChildren().addAll(welcome, roleLabel, new Separator());
-
-        // --- ДАЛЕЕ КОД КНОПОК ОСТАЕТСЯ ТЕМ ЖЕ ---
-        String r = user.getRole();
-
-        if (r.equals("Administrator")) {
-            createNavButton("Manage Staff");
-        }
-
-        if (r.equals("Manager") || r.equals("Administrator")) {
-            createNavButton("Inventory Management");
-        }
-
-        if (r.equals("Cashier") || r.equals("Administrator")) {
-            createNavButton("New Sale (POS)");
-        }
-
+        // Кнопка Выхода
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
         logoutBtn = new Button("Logout");
-        logoutBtn.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white; -fx-cursor: hand;");
         logoutBtn.setMaxWidth(Double.MAX_VALUE);
+        logoutBtn.setStyle("-fx-background-color: #EF4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 10;");
 
-        sidebar.getChildren().addAll(spacer, logoutBtn);
+        sidebar.getChildren().addAll(profileBox, new Separator(), spacer, logoutBtn);
 
-        contentArea = new StackPane();
-        contentArea.setPadding(new Insets(20));
-        contentArea.getChildren().add(new Label("Select an option from the sidebar to begin."));
+        // --- TOP BAR (Header) ---
+        HBox topBar = new HBox();
+        topBar.setPadding(new Insets(15, 25, 15, 25));
+        topBar.setStyle("-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
 
-        root.setLeft(sidebar);
-        root.setCenter(contentArea);
+        titleLabel = new Label(user.getRole() + " Dashboard");
+        titleLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+        titleLabel.setStyle("-fx-text-fill: #1F2937;");
+
+        topBar.getChildren().add(titleLabel);
+
+        // Сборка
+        setLeft(sidebar);
+        setTop(topBar);
+        setCenter(centerContent); // Сюда встанет AdminPane, ManagerView или CashierPane
     }
 
-    private void createNavButton(String text) {
-        Button btn = new Button(text);
-        btn.setMaxWidth(Double.MAX_VALUE);
-        btn.setStyle("-fx-background-color: #34495e; -fx-text-fill: white; -fx-alignment: center-left; -fx-padding: 10; -fx-cursor: hand;");
-
-        // Эффект при наведении (опционально)
-        btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-alignment: center-left; -fx-padding: 10;"));
-        btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: #34495e; -fx-text-fill: white; -fx-alignment: center-left; -fx-padding: 10;"));
-
-        sidebar.getChildren().add(btn);
-        navButtons.put(text, btn);
-    }
-
-    public BorderPane getRoot() { return root; }
     public Button getLogoutBtn() { return logoutBtn; }
-    public Button getNavButton(String name) { return navButtons.get(name); }
-
-    // Метод для смены экрана в центре
-    public void setCenter(javafx.scene.Node node) {
-        contentArea.getChildren().clear();
-        contentArea.getChildren().add(node);
-    }
 }
