@@ -8,7 +8,7 @@ public abstract class User implements Serializable {
     private String username, password, fullName, phone, email;
     private LocalDate dateOfBirth;
     private double salary;
-    private boolean isActive = true; // Для управления доступом
+    private boolean isActive = true;
 
     public User(String username, String password, String fullName, LocalDate dob, String phone, String email, double salary) {
         this.username = username;
@@ -22,7 +22,7 @@ public abstract class User implements Serializable {
 
     public abstract String getRole();
 
-    // Getters & Setters
+
     public String getUsername() { return username; }
     public String getPassword() { return password; }
     public String getFullName() { return fullName; }

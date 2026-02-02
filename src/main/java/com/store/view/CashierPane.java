@@ -10,16 +10,13 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 public class CashierPane extends BorderPane {
-    // Таблицы
     private TableView<Product> productsTable;
     private TableView<Product> cartTable;
 
-    // Поля и кнопки
     private TextField tfSearch, tfQuantity;
     private Button btnAddToCart, btnRemoveFromCart, btnCheckout;
     private Label lblTotal;
 
-    // История
     private ListView<String> historyList;
     private Label lblHistoryTotal;
 
@@ -27,7 +24,6 @@ public class CashierPane extends BorderPane {
         setPadding(new Insets(10));
         setStyle("-fx-background-color: #F3F4F6;");
 
-        // --- ЛЕВАЯ ПАНЕЛЬ: ТОВАРЫ ---
         VBox leftPane = new VBox(15);
         leftPane.setPadding(new Insets(15));
         leftPane.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 1);");
@@ -74,12 +70,10 @@ public class CashierPane extends BorderPane {
         actionBox.getChildren().addAll(new Label("Qty:"), tfQuantity, btnAddToCart);
         leftPane.getChildren().addAll(lblTitle, tfSearch, productsTable, actionBox);
 
-        // --- ПРАВАЯ ПАНЕЛЬ: КОРЗИНА И ИСТОРИЯ ---
         SplitPane rightSplit = new SplitPane();
         rightSplit.setOrientation(javafx.geometry.Orientation.VERTICAL);
         rightSplit.setStyle("-fx-background-color: transparent; -fx-padding: 0 0 0 10;");
 
-        // 1. Текущая корзина
         VBox cartBox = new VBox(10);
         cartBox.setPadding(new Insets(15));
         cartBox.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
@@ -110,7 +104,6 @@ public class CashierPane extends BorderPane {
 
         cartBox.getChildren().addAll(lblCart, cartTable, btnRemoveFromCart, new Separator(), lblTotal, btnCheckout);
 
-        // 2. История за сегодня
         VBox historyBox = new VBox(10);
         historyBox.setPadding(new Insets(15));
         historyBox.setStyle("-fx-background-color: #F9FAFB; -fx-background-radius: 10;");
@@ -129,7 +122,6 @@ public class CashierPane extends BorderPane {
         rightSplit.getItems().addAll(cartBox, historyBox);
         rightSplit.setDividerPositions(0.65);
 
-        // Main Split
         SplitPane mainSplit = new SplitPane(leftPane, rightSplit);
         mainSplit.setDividerPositions(0.45);
         mainSplit.setStyle("-fx-background-color: transparent;");
@@ -137,7 +129,6 @@ public class CashierPane extends BorderPane {
         setCenter(mainSplit);
     }
 
-    // Getters
     public TableView<Product> getProductsTable() { return productsTable; }
     public TableView<Product> getCartTable() { return cartTable; }
     public TextField getTfSearch() { return tfSearch; }

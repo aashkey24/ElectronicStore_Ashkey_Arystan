@@ -22,7 +22,6 @@ public class DashboardView extends BorderPane {
     private User currentUser;
     private List<Button> menuButtons = new ArrayList<>();
 
-    // UI Theme Constants
     private final String SIDEBAR_BG = "#111827";
     private final String IDLE_STYLE = "-fx-background-color: transparent; -fx-text-fill: #D1D5DB; -fx-padding: 12 20; -fx-cursor: hand; -fx-alignment: CENTER_LEFT; -fx-font-size: 14px;";
     private final String HOVER_STYLE = "-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 12 20; -fx-cursor: hand; -fx-alignment: CENTER_LEFT; -fx-font-size: 14px;";
@@ -31,13 +30,11 @@ public class DashboardView extends BorderPane {
     public DashboardView(User user, Node initialContent) {
         this.currentUser = user;
 
-        // --- SIDEBAR ---
         VBox sidebar = new VBox(10);
         sidebar.setPadding(new Insets(20, 0, 20, 0));
         sidebar.setPrefWidth(260);
         sidebar.setStyle("-fx-background-color: " + SIDEBAR_BG + ";");
 
-        // Profile Branding
         VBox profileBox = new VBox(12);
         profileBox.setAlignment(Pos.CENTER);
         profileBox.setPadding(new Insets(0, 0, 20, 0));
@@ -54,14 +51,10 @@ public class DashboardView extends BorderPane {
         Label roleLbl = new Label(user.getRole().toUpperCase());
         roleLbl.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 10px; -fx-background-color: #374151; -fx-padding: 3 10; -fx-background-radius: 10;");
         profileBox.getChildren().addAll(logo, nameLbl, roleLbl);
-
-        // Menu Container
         menuBox = new VBox(5);
         Label sectionHeader = new Label("  MAIN NAVIGATION");
         sectionHeader.setStyle("-fx-text-fill: #4B5563; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 10 0 5 10;");
         menuBox.getChildren().add(sectionHeader);
-
-        // Dynamic buttons based on User Role
         Button defaultActive = null;
         if (user.getRole().equals("Administrator")) {
             defaultActive = createMenuButton("Staff & Security", "admin");
@@ -84,13 +77,9 @@ public class DashboardView extends BorderPane {
         logoutBtn.setOnAction(e -> handleLogout());
 
         sidebar.getChildren().addAll(profileBox, new Separator(), menuBox, spacer, logoutBtn);
-
-        // --- TOP BAR ---
         HBox topBar = new HBox();
         topBar.setPadding(new Insets(15, 30, 15, 30));
         topBar.setStyle("-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 1);");
-
-        // Dynamic Title
         String initialTitle = user.getRole().equals("Administrator") ? "System Administration" :
                 (user.getRole().equals("Manager") ? "Inventory Management" : "Sales Terminal");
         titleLabel = new Label(initialTitle);

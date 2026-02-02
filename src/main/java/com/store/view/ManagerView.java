@@ -11,20 +11,16 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 public class ManagerView extends VBox {
-    // Inventory
     private TableView<Product> productTable;
     private TextField tfName, tfBuyPrice, tfSellPrice, tfQuantity, tfDiscount;
     private ComboBox<String> cbCategory, cbSupplier;
     private Button btnAddProduct, btnUpdateProduct, btnDeleteProduct, btnClearForm;
     private TextField tfSearch;
     private Label lblAlert;
-
-    // Suppliers & Categories
     private ListView<String> supplierList, categoryList;
     private TextField tfNewSupplier, tfNewCategory;
     private Button btnAddSupplier, btnRemoveSupplier, btnAddCategory, btnRemoveCategory;
 
-    // Stats
     private TableView<CashierMetric> cashierTable;
     private DatePicker dpStart, dpEnd;
     private Button btnRefreshStats;
@@ -35,7 +31,6 @@ public class ManagerView extends VBox {
         setSpacing(20);
         setStyle("-fx-background-color: #F3F4F6;");
 
-        // Header
         HBox header = new HBox(20);
         header.setAlignment(Pos.CENTER_LEFT);
         Label title = new Label("Managerial Control Center");
@@ -83,7 +78,6 @@ public class ManagerView extends VBox {
 
         productTable.getColumns().addAll(cName, cCat, cQty, cSell, cDisc);
 
-        // Form
         GridPane form = new GridPane(); form.setHgap(10); form.setVgap(10);
         form.setPadding(new Insets(15));
         form.setStyle("-fx-background-color: white; -fx-background-radius: 8;");
@@ -145,7 +139,6 @@ public class ManagerView extends VBox {
         return layout;
     }
 
-    // Static Metric Class
     public static class CashierMetric {
         private String name; private int billCount; private double revenue;
         public CashierMetric(String n, int b, double r) { this.name = n; this.billCount = b; this.revenue = r; }
@@ -154,7 +147,6 @@ public class ManagerView extends VBox {
         public double getRevenue() { return revenue; }
     }
 
-    // Getters
     public TableView<Product> getProductTable() { return productTable; }
     public TextField getTfName() { return tfName; }
     public ComboBox<String> getCbCategory() { return cbCategory; }

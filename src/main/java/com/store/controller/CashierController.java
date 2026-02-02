@@ -66,11 +66,8 @@ public class CashierController {
                 showAlert("Stock Error", "Available: " + selected.getStockQuantity());
                 return;
             }
-
-            // ПРИМЕНЕНИЕ СКИДКИ: Берем цену со скидкой
             double finalPrice = selected.getDiscountedPrice();
 
-            // Ищем в корзине
             boolean exists = false;
             for (Product p : cart) {
                 if (p.getName().equals(selected.getName())) {
@@ -84,7 +81,6 @@ public class CashierController {
             }
 
             if (!exists) {
-                // Создаем копию для корзины с ПРИМЕНЕННОЙ ценой
                 Product itemForCart = new Product(selected.getName(), selected.getCategory(),
                         selected.getSupplier(), selected.getPurchasePrice(),
                         finalPrice, qty);
@@ -103,7 +99,6 @@ public class CashierController {
     private void checkout() {
         if (cart.isEmpty()) return;
 
-        // 1. Уменьшаем сток
         for (Product cartItem : cart) {
             for (Product stockItem : allProducts) {
                 if (stockItem.getName().equals(cartItem.getName())) {
@@ -113,13 +108,10 @@ public class CashierController {
             }
         }
 
-        // 2. Сохраняем базу
         IOHandler.saveList(PRODUCTS_FILE, new ArrayList<>(allProducts));
 
-        // 3. Печатаем чек (используя класс Bill)
         printBill();
 
-        // 4. Очистка
         cart.clear();
         updateTotal();
         view.getProductsTable().refresh();
@@ -130,7 +122,6 @@ public class CashierController {
     private void printBill() {
         double total = cart.stream().mapToDouble(p -> p.getSellingPrice() * p.getStockQuantity()).sum();
 
-        // Используем модель Bill для форматирования
         Bill billObj = new Bill(new ArrayList<>(cart), currentUser, total);
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(billObj.getFileName()))) {

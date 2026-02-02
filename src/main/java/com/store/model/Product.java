@@ -20,8 +20,6 @@ public class Product implements Serializable {
         this.discount = 0.0;
         this.purchaseDate = LocalDate.now();
     }
-
-    // Getters
     public String getName() { return name; }
     public String getCategory() { return category; }
     public String getSupplier() { return supplier; }
@@ -30,7 +28,6 @@ public class Product implements Serializable {
     public int getStockQuantity() { return stockQuantity; }
     public double getDiscount() { return discount; }
 
-    // Setters
     public void setStockQuantity(int stockQuantity) { this.stockQuantity = stockQuantity; }
     public void setDiscount(double discount) { this.discount = discount; }
     public void setPurchasePrice(double purchasePrice) { this.purchasePrice = purchasePrice; }
@@ -41,4 +38,10 @@ public class Product implements Serializable {
     public double getDiscountedPrice() {
         return sellingPrice * (1 - (discount / 100.0));
     }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+
 }

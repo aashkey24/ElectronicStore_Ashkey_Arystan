@@ -123,7 +123,6 @@ public class ManagerController {
         view.getLblTotalItems().setText("Items Sold: " + totalItems);
     }
 
-    // Utils
     private boolean isDateMatch(String filename, LocalDate s, LocalDate e) {
         if (s == null && e == null) return true;
         try {
@@ -195,9 +194,61 @@ public class ManagerController {
         view.getTfBuyPrice().clear(); view.getTfSellPrice().clear();
         view.getTfDiscount().clear();
         view.getCbCategory().setValue(null); view.getCbSupplier().setValue(null);
+        view.getProductTable().getSelectionModel().clearSelection();
     }
 
-    private void updateProduct() { /* Logic similar to addOrRestock but for the selected index */ }
-    private void deleteProduct() { /* Logic similar to admin delete */ }
+    private void updateProduct() {
+        Product selected = view.getProductTable().getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert("Selection Error", "Please select a product from the table to update.");
+            return;
+        }
+
+        try {
+            String name = view.getTfName().getText().trim();
+            String cat = view.getCbCategory().getValue();
+            String sup = view.getCbSupplier().getValue();
+            int qty = Integer.parseInt(view.getTfQuantity().getText().trim());
+            double buy = Double.parseDouble(view.getTfBuyPrice().getText().trim());
+            double sell = Double.parseDouble(view.getTfSellPrice().getText().trim());
+            double disc = view.getTfDiscount().getText().isEmpty() ? 0 : Double.parseDouble(view.getTfDiscount().getText().trim());
+
+            if (name.isEmpty() || cat == null || sup == null) {
+                showAlert("Input Error", "All fields are required.");
+                return;
+            }
+
+            if (!selected.getName().equalsIgnoreCase(name)) {
+                boolean exists = products.stream().anyMatch(p -> p.getName().equalsIgnoreCase(name));
+                if (exists) {
+                    showAlert("Duplicate Error", "A product with this name already exists.");
+                    return;
+                }
+            }
+
+            selected.setName(name);
+            selected.setCategory(cat);
+            selected.setSupplier(sup);
+            selected.setStockQuantity(qty);
+            selected.setPurchasePrice(buy);
+            selected.setSellingPrice(sell);
+            selected.setDiscount(disc);
+
+            finishEdit();
+        } catch (Exception e) {
+            showAlert("Input Error", "Please enter valid numeric values.");
+        }
+    }
+
+    private void deleteProduct() {
+        Product selected = view.getProductTable().getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            products.remove(selected);
+            finishEdit();
+        } else {
+            showAlert("Selection Error", "Please select a product from the table to delete.");
+        }
+    }
+
     private void showAlert(String t, String c) { new Alert(Alert.AlertType.ERROR, c).show(); }
 }

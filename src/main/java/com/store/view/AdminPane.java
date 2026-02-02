@@ -23,9 +23,7 @@ public class AdminPane extends VBox {
     public AdminPane() {
         setPadding(new Insets(25));
         setSpacing(25);
-        setStyle("-fx-background-color: #F9FAFB;"); // Sleek Light Gray
-
-        // --- SECTION 1: USER TABLE CARD ---
+        setStyle("-fx-background-color: #F9FAFB;");
         VBox tableCard = new VBox(15);
         tableCard.setPadding(new Insets(20));
         tableCard.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 10, 0, 0, 4);");
@@ -47,11 +45,9 @@ public class AdminPane extends VBox {
         userTable.getColumns().addAll(colName, colRole, colStatus);
         tableCard.getChildren().addAll(lblHeader, userTable);
 
-        // --- SECTION 2: FORM & FINANCIALS ---
         HBox bottomSection = new HBox(25);
         bottomSection.setPrefHeight(380);
 
-        // Employee Form
         VBox formCard = new VBox(20);
         formCard.setPadding(new Insets(25));
         formCard.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 10, 0, 0, 4);");
@@ -94,7 +90,6 @@ public class AdminPane extends VBox {
         actions.getChildren().addAll(btnAdd, btnUpdate, btnDelete, btnClear);
         formCard.getChildren().addAll(new Label("Profile Details"), form, new Separator(), actions);
 
-        // Financial Analytics Card
         VBox statsCard = new VBox(15);
         statsCard.setPadding(new Insets(25));
         statsCard.setPrefWidth(350);
@@ -129,7 +124,6 @@ public class AdminPane extends VBox {
         return tf;
     }
 
-    // Getters
     public CheckBox getCbIsActive() { return cbIsActive; }
     public TableView<User> getUserTable() { return userTable; }
     public TextField getTfUsername() { return tfUsername; }

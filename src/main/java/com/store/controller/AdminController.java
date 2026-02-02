@@ -107,12 +107,10 @@ public class AdminController {
     }
 
     private void calculateFinances() {
-        // Costs
         double salaries = userList.stream().mapToDouble(User::getSalary).sum();
         ArrayList<Product> products = IOHandler.loadList(PRODUCTS_FILE);
         double stockValue = products.stream().mapToDouble(p -> p.getPurchasePrice() * p.getStockQuantity()).sum();
 
-        // Income (Scanning Bills)
         double income = 0;
         File[] files = new File(".").listFiles();
         if (files != null) {
